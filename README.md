@@ -52,71 +52,91 @@ docker build -t role-panel-bot .
 docker run -e DISCORD_TOKEN=... -e DATABASE_URL=... role-panel-bot
 ```
 
-## Kubernetes
+## Kubernetes (Helm)
 
 ### 前提条件
 
 - kubectl設定済み
+- Helm 3.x インストール済み
 - Kubernetesクラスターへのアクセス
 
 ### デプロイ手順
 
-1. Secretの設定
+1. values.yamlの設定
 
 ```bash
-# Discord TokenとPostgreSQLパスワードを設定
-kubectl create secret generic role-panel-bot-secrets \
-  --from-literal=discord-token=YOUR_DISCORD_TOKEN_HERE \
-  --from-literal=database-url=postgres://role_panel:YOUR_PASSWORD@postgres:5432/role_panel
+# カスタム設定ファイルを作成
+cat > my-values.yaml <<EOF
+discord:
+  token: "YOUR_DISCORD_TOKEN_HERE"
 
-kubectl create secret generic postgres-secrets \
-  --from-literal=username=role_panel \
-  --from-literal=password=YOUR_PASSWORD
+postgresql:
+  enabled: true
+  auth:
+    password: "YOUR_POSTGRES_PASSWORD"
+
+config:
+  logLevel: "info"
+EOF
 ```
 
-2. PostgreSQLのデプロイ
+2. Helmでデプロイ
 
 ```bash
-kubectl apply -f deploy/kubernetes/postgres.yaml
+# インストール
+helm install role-panel-bot ./helm/role-panel-bot -f my-values.yaml
+
+# 既存Secretを使用する場合
+helm install role-panel-bot ./helm/role-panel-bot \
+  --set discord.existingSecret=my-discord-secret \
+  --set postgresql.auth.existingSecret=my-postgres-secret
 ```
 
-3. Botのデプロイ
-
-```bash
-kubectl apply -f deploy/kubernetes/deployment.yaml
-kubectl apply -f deploy/kubernetes/service.yaml
-```
-
-4. デプロイ確認
+3. デプロイ確認
 
 ```bash
 # Pod状態確認
-kubectl get pods
+kubectl get pods -l app.kubernetes.io/name=role-panel-bot
 
 # ログ確認
 kubectl logs -f deployment/role-panel-bot
 
 # ヘルスチェック確認
-kubectl get pods -l app=role-panel-bot
+helm status role-panel-bot
 ```
 
-### マイグレーション実行
+### Webhook/Ingress設定
+
+```yaml
+# my-values.yaml
+webhook:
+  enabled: true
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+    hosts:
+      - host: discord-bot.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: discord-bot-tls
+        hosts:
+          - discord-bot.example.com
+```
+
+### アップグレード
 
 ```bash
-# PostgreSQL Podに接続
-kubectl exec -it postgres-0 -- psql -U role_panel -d role_panel
-
-# マイグレーションファイルを手動実行、または
-# 初回起動時にBot側で自動実行される場合はスキップ
+helm upgrade role-panel-bot ./helm/role-panel-bot -f my-values.yaml
 ```
 
 ### アンデプロイ
 
 ```bash
-kubectl delete -f deploy/kubernetes/service.yaml
-kubectl delete -f deploy/kubernetes/deployment.yaml
-kubectl delete -f deploy/kubernetes/postgres.yaml
-kubectl delete secret role-panel-bot-secrets postgres-secrets
+helm uninstall role-panel-bot
 ```
 
 ## コマンド
