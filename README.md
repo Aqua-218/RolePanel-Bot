@@ -62,15 +62,31 @@ docker run -e DISCORD_TOKEN=... -e DATABASE_URL=... role-panel-bot
 
 ### デプロイ手順
 
-1. values.yamlの設定
+1. Dockerイメージのビルド
 
 ```bash
-# プロジェクトルートのvalues.yamlを編集
+# サーバー上でリポジトリをクローン
+git clone https://github.com/Aqua-218/RolePanel-Bot.git
+cd RolePanel-Bot
+
+# Dockerイメージをビルド
+docker build -t role-panel-bot:latest .
+```
+
+2. values.yamlの設定
+
+```bash
+# values.yamlを編集
 vi values.yaml
 ```
 
 ```yaml
 # 必須設定
+image:
+  repository: role-panel-bot
+  pullPolicy: Never  # ローカルイメージを使用
+  tag: "latest"
+
 discord:
   token: "YOUR_DISCORD_TOKEN_HERE"
 
@@ -79,7 +95,7 @@ postgresql:
     password: "YOUR_POSTGRES_PASSWORD"
 ```
 
-2. Helmでデプロイ
+3. Helmでデプロイ
 
 ```bash
 # インストール
@@ -90,7 +106,7 @@ helm install role-panel-bot ./helm/role-panel-bot -f values.yaml \
   --set discord.existingSecret=my-discord-secret
 ```
 
-3. デプロイ確認
+4. デプロイ確認
 
 ```bash
 # Pod状態確認
