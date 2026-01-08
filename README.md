@@ -65,31 +65,29 @@ docker run -e DISCORD_TOKEN=... -e DATABASE_URL=... role-panel-bot
 1. values.yamlの設定
 
 ```bash
-# カスタム設定ファイルを作成
-cat > my-values.yaml <<EOF
+# プロジェクトルートのvalues.yamlを編集
+vi values.yaml
+```
+
+```yaml
+# 必須設定
 discord:
   token: "YOUR_DISCORD_TOKEN_HERE"
 
 postgresql:
-  enabled: true
   auth:
     password: "YOUR_POSTGRES_PASSWORD"
-
-config:
-  logLevel: "info"
-EOF
 ```
 
 2. Helmでデプロイ
 
 ```bash
 # インストール
-helm install role-panel-bot ./helm/role-panel-bot -f my-values.yaml
+helm install role-panel-bot ./helm/role-panel-bot -f values.yaml
 
 # 既存Secretを使用する場合
-helm install role-panel-bot ./helm/role-panel-bot \
-  --set discord.existingSecret=my-discord-secret \
-  --set postgresql.auth.existingSecret=my-postgres-secret
+helm install role-panel-bot ./helm/role-panel-bot -f values.yaml \
+  --set discord.existingSecret=my-discord-secret
 ```
 
 3. デプロイ確認
@@ -130,7 +128,7 @@ webhook:
 ### アップグレード
 
 ```bash
-helm upgrade role-panel-bot ./helm/role-panel-bot -f my-values.yaml
+helm upgrade role-panel-bot ./helm/role-panel-bot -f values.yaml
 ```
 
 ### アンデプロイ
