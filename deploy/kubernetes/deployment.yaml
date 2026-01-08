@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: role-panel-bot
+  labels:
+    app: role-panel-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: role-panel-bot
+  template:
+    metadata:
+      labels:
+        app: role-panel-bot
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: bot
+          image: role-panel-bot:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: health
+          env:
+            - name: DISCORD_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: role-panel-bot-secrets
+                  key: discord-token
+            - name: DATABASE_URL
+              value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/role_panel"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: password
+            - name: RUST_LOG
+              valueFrom:
+                configMapKeyRef:
+                  name: role-panel-bot-config
+                  key: log-level
+            - name: HEALTH_PORT
+              value: "8080"
+            - name: DATABASE_MAX_CONNECTIONS
+              valueFrom:
+                configMapKeyRef:
+                  name: role-panel-bot-config
+                  key: db-max-connections
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: health
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
+          securityContext:
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: role-panel-bot-config
+data:
+  log-level: "info"
+  db-max-connections: "5"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: role-panel-bot-secrets
+type: Opaque
+stringData:
+  discord-token: "YOUR_DISCORD_TOKEN_HERE"
+  database-url: "postgres://user:password@host:5432/role_panel"
