@@ -1,5 +1,5 @@
 # Build stage
-FROM rust:1.83-slim-bookworm AS builder
+FROM rust:1.85-slim-bookworm AS builder
 
 WORKDIR /app
 
@@ -9,20 +9,17 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy manifests
+# Copy manifests and vendor directory
 COPY Cargo.toml Cargo.lock ./
-
-# Create dummy main to cache dependencies
-RUN mkdir src && echo "fn main() {}" > src/main.rs
-RUN cargo build --release
-RUN rm -rf src
+COPY .cargo ./.cargo
+COPY vendor ./vendor
 
 # Copy source code
 COPY src ./src
 COPY migrations ./migrations
 
-# Build the application
-RUN touch src/main.rs && cargo build --release
+# Build the application using vendored dependencies (offline)
+RUN cargo build --release --offline
 
 # Runtime stage
 FROM debian:bookworm-slim

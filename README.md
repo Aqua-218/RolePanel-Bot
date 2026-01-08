@@ -11,7 +11,7 @@
 
 ## 要件
 
-- Rust 1.83.0以降（edition2024対応）
+- Rust 1.85.0以降（edition2024対応）
 - PostgreSQL 14以降
 - Discord Bot Token
 
