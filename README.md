@@ -68,14 +68,11 @@ docker run -e DISCORD_TOKEN=... -e DATABASE_URL=... role-panel-bot
 コンテナレジストリを使用せず、デプロイ先のサーバー上で直接Dockerイメージをビルドします。
 
 ```bash
-# サーバー上でリポジトリをクローン
 git clone https://github.com/Aqua-218/RolePanel-Bot.git
 cd RolePanel-Bot
 
-# Dockerイメージをビルド（Rust 1.85使用、edition2024対応）
 docker build -t role-panel-bot:latest .
 
-# ビルド確認
 docker images | grep role-panel-bot
 ```
 
