@@ -1,0 +1,12 @@
+apiVersion: v2
+name: role-panel-bot
+description: A Helm chart for Role Panel Discord Bot
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - discord
+  - bot
+  - role-panel
+maintainers:
+  - name: Aqua-218
