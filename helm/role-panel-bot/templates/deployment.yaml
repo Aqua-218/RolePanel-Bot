@@ -55,6 +55,36 @@ spec:
               value: {{ .Values.config.healthPort | quote }}
             - name: DATABASE_MAX_CONNECTIONS
               value: {{ .Values.config.databaseMaxConnections | quote }}
+            {{- if or .Values.errorWebhook.url .Values.errorWebhook.existingSecret }}
+            - name: ERROR_WEBHOOK_URL
+              {{- if .Values.errorWebhook.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.errorWebhook.existingSecret }}
+                  key: error-webhook-url
+              {{- else }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "role-panel-bot.fullname" . }}-error-webhook
+                  key: error-webhook-url
+              {{- end }}
+            {{- end }}
+            {{- if .Values.botInfo.name }}
+            - name: BOT_NAME
+              value: {{ .Values.botInfo.name | quote }}
+            {{- end }}
+            {{- if .Values.botInfo.description }}
+            - name: BOT_DESCRIPTION
+              value: {{ .Values.botInfo.description | quote }}
+            {{- end }}
+            {{- if .Values.botInfo.developerId }}
+            - name: BOT_DEVELOPER_ID
+              value: {{ .Values.botInfo.developerId | quote }}
+            {{- end }}
+            {{- if .Values.botInfo.githubUrl }}
+            - name: BOT_GITHUB_URL
+              value: {{ .Values.botInfo.githubUrl | quote }}
+            {{- end }}
           livenessProbe:
             httpGet:
               path: /health/live
