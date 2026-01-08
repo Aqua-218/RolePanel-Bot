@@ -43,6 +43,20 @@ config:
   healthPort: 8080
   databaseMaxConnections: 5
 
+# Error Webhook Configuration
+errorWebhook:
+  # Discord Webhook URL for error notifications
+  url: ""
+  # Or use existing secret containing error-webhook-url key
+  existingSecret: ""
+
+# Bot Info Configuration
+botInfo:
+  name: "Role Panel Bot"
+  description: "2025年10月同期会向けに作られたロールパネルBot"
+  developerId: ""
+  githubUrl: "https://github.com/Aqua-218/RolePanel-Bot"
+
 # Resources
 resources:
   requests:
