@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "role-panel-bot.fullname" . }}
+  labels:
+    {{- include "role-panel-bot.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "role-panel-bot.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "role-panel-bot.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "role-panel-bot.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: health
+              containerPort: {{ .Values.config.healthPort }}
+              protocol: TCP
+          env:
+            - name: DISCORD_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "role-panel-bot.discordSecretName" . }}
+                  key: discord-token
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "role-panel-bot.databaseSecretName" . }}
+                  key: password
+            - name: DATABASE_URL
+              value: {{ include "role-panel-bot.databaseUrl" . | quote }}
+            - name: RUST_LOG
+              value: {{ .Values.config.logLevel | quote }}
+            - name: HEALTH_PORT
+              value: {{ .Values.config.healthPort | quote }}
+            - name: DATABASE_MAX_CONNECTIONS
+              value: {{ .Values.config.databaseMaxConnections | quote }}
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: health
+            initialDelaySeconds: {{ .Values.healthCheck.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthCheck.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthCheck.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthCheck.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: health
+            initialDelaySeconds: {{ .Values.healthCheck.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthCheck.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthCheck.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthCheck.readiness.failureThreshold }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
