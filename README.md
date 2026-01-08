@@ -11,7 +11,7 @@
 
 ## 要件
 
-- Rust 1.75.0以降
+- Rust 1.83.0以降（edition2024対応）
 - PostgreSQL 14以降
 - Discord Bot Token
 
@@ -59,21 +59,29 @@ docker run -e DISCORD_TOKEN=... -e DATABASE_URL=... role-panel-bot
 - kubectl設定済み
 - Helm 3.x インストール済み
 - Kubernetesクラスターへのアクセス
+- Docker（イメージビルド用）
 
 ### デプロイ手順
 
-1. Dockerイメージのビルド
+#### 1. サーバー上でDockerイメージをローカルビルド
+
+コンテナレジストリを使用せず、デプロイ先のサーバー上で直接Dockerイメージをビルドします。
 
 ```bash
 # サーバー上でリポジトリをクローン
 git clone https://github.com/Aqua-218/RolePanel-Bot.git
 cd RolePanel-Bot
 
-# Dockerイメージをビルド
+# Dockerイメージをビルド（Rust 1.83使用、edition2024対応）
 docker build -t role-panel-bot:latest .
+
+# ビルド確認
+docker images | grep role-panel-bot
 ```
 
-2. values.yamlの設定
+> **注意**: ビルドには数分かかります。vendorディレクトリが含まれているためオフラインビルドが可能です。
+
+#### 2. values.yamlの設定
 
 ```bash
 # values.yamlを編集
@@ -84,18 +92,35 @@ vi values.yaml
 # 必須設定
 image:
   repository: role-panel-bot
-  pullPolicy: Never  # ローカルイメージを使用
+  pullPolicy: Never  # ローカルイメージを使用（重要！）
   tag: "latest"
 
 discord:
   token: "YOUR_DISCORD_TOKEN_HERE"
 
 postgresql:
+  host: "postgres-service"  # クラスター内のPostgreSQLサービス名
+  port: 5432
+  database: "role_panel"
+  username: "role_panel"
   auth:
     password: "YOUR_POSTGRES_PASSWORD"
+
+# オプション設定
+errorWebhook:
+  enabled: true
+  url: "https://discord.com/api/webhooks/xxx/yyy"
+
+botInfo:
+  name: "Role Panel Bot"
+  description: "ロール選択パネルを管理するBot"
+  developerId: "YOUR_DISCORD_USER_ID"
+  githubUrl: "https://github.com/Aqua-218/RolePanel-Bot"
 ```
 
-3. Helmでデプロイ
+> **重要**: `image.pullPolicy: Never` を設定することで、Kubernetesはレジストリからpullせずローカルイメージを使用します。
+
+#### 3. Helmでデプロイ
 
 ```bash
 # インストール
@@ -106,7 +131,7 @@ helm install role-panel-bot ./helm/role-panel-bot -f values.yaml \
   --set discord.existingSecret=my-discord-secret
 ```
 
-4. デプロイ確認
+#### 4. デプロイ確認
 
 ```bash
 # Pod状態確認
@@ -117,6 +142,26 @@ kubectl logs -f deployment/role-panel-bot
 
 # ヘルスチェック確認
 helm status role-panel-bot
+```
+
+#### トラブルシューティング
+
+**ImagePullBackOff エラーの場合:**
+```bash
+# イメージがローカルに存在するか確認
+docker images | grep role-panel-bot
+
+# values.yamlで pullPolicy: Never が設定されているか確認
+grep -A2 "image:" values.yaml
+```
+
+**Podが起動しない場合:**
+```bash
+# Pod詳細確認
+kubectl describe pod -l app.kubernetes.io/name=role-panel-bot
+
+# イベント確認
+kubectl get events --sort-by='.lastTimestamp'
 ```
 
 ### Webhook/Ingress設定
