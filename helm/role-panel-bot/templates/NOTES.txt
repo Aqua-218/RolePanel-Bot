@@ -1,0 +1,33 @@
+Role Panel Bot has been deployed!
+
+1. Get the application status:
+   kubectl get pods -l "app.kubernetes.io/name={{ include "role-panel-bot.name" . }},app.kubernetes.io/instance={{ .Release.Name }}"
+
+2. Check the logs:
+   kubectl logs -f deployment/{{ include "role-panel-bot.fullname" . }}
+
+3. Health check endpoints:
+   - Liveness: /health/live
+   - Readiness: /health/ready
+
+{{- if .Values.webhook.enabled }}
+{{- if .Values.webhook.ingress.enabled }}
+
+4. Webhook endpoint is available at:
+{{- range $host := .Values.webhook.ingress.hosts }}
+  {{- range .paths }}
+   http{{ if $.Values.webhook.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- if .Values.postgresql.enabled }}
+
+PostgreSQL is deployed as part of this release.
+{{- else }}
+
+Using external PostgreSQL at: {{ .Values.externalDatabase.host }}:{{ .Values.externalDatabase.port }}
+{{- end }}
+
+For more information, visit the project repository.
