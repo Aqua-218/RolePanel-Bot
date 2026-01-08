@@ -72,7 +72,7 @@ docker run -e DISCORD_TOKEN=... -e DATABASE_URL=... role-panel-bot
 git clone https://github.com/Aqua-218/RolePanel-Bot.git
 cd RolePanel-Bot
 
-# Dockerイメージをビルド（Rust 1.83使用、edition2024対応）
+# Dockerイメージをビルド（Rust 1.85使用、edition2024対応）
 docker build -t role-panel-bot:latest .
 
 # ビルド確認
