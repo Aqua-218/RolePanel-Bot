@@ -1,0 +1,75 @@
+# Role Panel Bot Helm Values
+# Edit this file and deploy with: helm install role-panel-bot ./helm/role-panel-bot -f values.yaml
+
+replicaCount: 1
+
+image:
+  repository: role-panel-bot
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+# Discord Bot Configuration
+discord:
+  # Discord Bot Token (required)
+  token: ""
+  # Or use existing secret containing discord-token key
+  existingSecret: ""
+
+# PostgreSQL Configuration
+postgresql:
+  enabled: true
+  auth:
+    username: role_panel
+    password: ""
+    database: role_panel
+    existingSecret: ""
+  primary:
+    persistence:
+      enabled: true
+      size: 1Gi
+
+# External PostgreSQL (when postgresql.enabled is false)
+externalDatabase:
+  host: ""
+  port: 5432
+  username: role_panel
+  password: ""
+  database: role_panel
+  existingSecret: ""
+
+# Application Configuration
+config:
+  logLevel: "info"
+  healthPort: 8080
+  databaseMaxConnections: 5
+
+# Resources
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "50m"
+  limits:
+    memory: "128Mi"
+    cpu: "200m"
+
+# Webhook Configuration (for Discord interactions endpoint)
+webhook:
+  enabled: false
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: discord-bot.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+
+# Metrics Configuration
+metrics:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s
