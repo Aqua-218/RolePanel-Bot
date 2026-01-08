@@ -5,7 +5,7 @@ replicaCount: 1
 
 image:
   repository: role-panel-bot
-  pullPolicy: IfNotPresent
+  pullPolicy: Never
   tag: "latest"
 
 # Discord Bot Configuration
