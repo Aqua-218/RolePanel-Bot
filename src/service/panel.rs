@@ -310,7 +310,7 @@ impl PanelService {
                     }
                 }
                 Err(e) => {
-                    if is_unknown_message_error(&e) {
+                    if should_recreate_message(&e) {
                         let message = self
                             .http
                             .create_message(channel_id)
@@ -481,10 +481,14 @@ impl PanelService {
     }
 }
 
-fn is_unknown_message_error(err: &twilight_http::Error) -> bool {
+fn should_recreate_message(err: &twilight_http::Error) -> bool {
     match err.kind() {
         ErrorType::Response { error, .. } => {
-            matches!(error, ApiError::General(general) if general.code == 10008)
+            matches!(
+                error,
+                ApiError::General(general)
+                    if matches!(general.code, 10003 | 10008 | 50001 | 50013)
+            )
         }
         _ => false,
     }

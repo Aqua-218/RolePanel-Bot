@@ -252,7 +252,11 @@ pub fn build_channel_select_menu(
         Component::ActionRow(ActionRow {
             components: vec![
                 Component::Button(Button {
-                    custom_id: Some(format!("panel:{}:channel_page:{}", panel_id, page.saturating_sub(1))),
+                    custom_id: Some(format!(
+                        "panel:{}:channel_page:{}",
+                        panel_id,
+                        page.saturating_sub(1)
+                    )),
                     disabled: page == 0,
                     emoji: None,
                     label: Some("前へ".to_string()),
@@ -734,9 +738,8 @@ mod tests {
         #[test]
         fn paginates_channels_over_25() {
             let panel_id = Uuid::new_v4();
-            let channels: Vec<(u64, String)> = (0..30)
-                .map(|i| (i as u64, format!("chan-{}", i)))
-                .collect();
+            let channels: Vec<(u64, String)> =
+                (0..30).map(|i| (i as u64, format!("chan-{}", i))).collect();
 
             let components = build_channel_select_menu(panel_id, &channels, 0);
 

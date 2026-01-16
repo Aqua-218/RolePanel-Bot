@@ -573,6 +573,23 @@ pub async fn handle_panel_edit_interaction(
                         .await?;
                 }
                 Err(e) => {
+                    tracing::error!(
+                        "Failed to post panel: panel_id={}, guild_id={}, channel_id={}, error={} ",
+                        panel_id,
+                        guild_id.get(),
+                        channel_id.get(),
+                        e
+                    );
+                    crate::service::notify_error(
+                        "Panel Post Error",
+                        format!(
+                            "panel_id={}, guild_id={}, channel_id={}, error={}",
+                            panel_id,
+                            guild_id.get(),
+                            channel_id.get(),
+                            e
+                        ),
+                    );
                     http.interaction(application_id)
                         .update_response(interaction_token)
                         .content(Some(""))
