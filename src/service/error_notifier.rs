@@ -84,7 +84,11 @@ pub struct ErrorNotification {
 }
 
 impl ErrorNotification {
-    pub fn new(severity: ErrorSeverity, title: impl Into<String>, description: impl Into<String>) -> Self {
+    pub fn new(
+        severity: ErrorSeverity,
+        title: impl Into<String>,
+        description: impl Into<String>,
+    ) -> Self {
         Self {
             severity,
             title: title.into(),
@@ -182,7 +186,10 @@ impl ErrorNotifier {
     }
 
     /// バックグラウンドでWebhookに送信するタスク
-    async fn run_notifier(webhook_url: String, mut receiver: mpsc::UnboundedReceiver<ErrorNotification>) {
+    async fn run_notifier(
+        webhook_url: String,
+        mut receiver: mpsc::UnboundedReceiver<ErrorNotification>,
+    ) {
         let client = reqwest::Client::new();
 
         while let Some(notification) = receiver.recv().await {

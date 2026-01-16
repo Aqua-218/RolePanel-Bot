@@ -166,13 +166,19 @@ mod tests {
     fn user_message_database_hides_details() {
         // User should not see database error details
         let err = AppError::Database(sqlx::Error::RowNotFound);
-        assert_eq!(err.user_message(), "エラーが発生しました。もう一度お試しください。");
+        assert_eq!(
+            err.user_message(),
+            "エラーが発生しました。もう一度お試しください。"
+        );
     }
 
     #[test]
     fn user_message_discord_hides_details() {
         let err = AppError::Discord("Detailed API error".to_string());
-        assert_eq!(err.user_message(), "エラーが発生しました。もう一度お試しください。");
+        assert_eq!(
+            err.user_message(),
+            "エラーが発生しました。もう一度お試しください。"
+        );
     }
 
     #[test]
@@ -184,7 +190,10 @@ mod tests {
     #[test]
     fn user_message_internal_hides_details() {
         let err = AppError::Internal("Stack trace...".to_string());
-        assert_eq!(err.user_message(), "エラーが発生しました。もう一度お試しください。");
+        assert_eq!(
+            err.user_message(),
+            "エラーが発生しました。もう一度お試しください。"
+        );
     }
 
     #[test]

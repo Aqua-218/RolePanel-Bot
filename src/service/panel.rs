@@ -141,7 +141,11 @@ impl PanelService {
             .await
     }
 
-    pub async fn update_panel(&self, panel_id: Uuid, update: PanelUpdate) -> Result<Panel, AppError> {
+    pub async fn update_panel(
+        &self,
+        panel_id: Uuid,
+        update: PanelUpdate,
+    ) -> Result<Panel, AppError> {
         if let Some(ref name) = update.name {
             let name = name.trim();
             if name.is_empty() {
@@ -352,11 +356,7 @@ impl PanelService {
             .build()
     }
 
-    pub fn build_panel_components(
-        &self,
-        panel: &Panel,
-        roles: &[PanelRole],
-    ) -> Vec<Component> {
+    pub fn build_panel_components(&self, panel: &Panel, roles: &[PanelRole]) -> Vec<Component> {
         match panel.style {
             PanelStyle::Button => self.build_button_components(panel, roles),
             PanelStyle::SelectMenu => self.build_select_menu_components(panel, roles),

@@ -6,8 +6,12 @@ use twilight_model::application::interaction::modal::ModalInteractionData;
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
 use twilight_model::channel::message::{Component, MessageFlags};
 use twilight_model::channel::ChannelType;
-use twilight_model::http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType};
-use twilight_model::id::marker::{ApplicationMarker, ChannelMarker, GuildMarker, InteractionMarker, RoleMarker};
+use twilight_model::http::interaction::{
+    InteractionResponse, InteractionResponseData, InteractionResponseType,
+};
+use twilight_model::id::marker::{
+    ApplicationMarker, ChannelMarker, GuildMarker, InteractionMarker, RoleMarker,
+};
 use twilight_model::id::Id;
 use uuid::Uuid;
 
@@ -49,7 +53,7 @@ pub async fn handle_panel_edit_interaction(
         "add_role" => {
             // Fetch guild roles from Discord API
             let guild_roles = http.roles(guild_id).await?.model().await?;
-            
+
             // Filter out @everyone and bot roles, get (id, name) tuples
             let roles: Vec<(u64, String)> = guild_roles
                 .iter()
@@ -62,7 +66,9 @@ pub async fn handle_panel_edit_interaction(
                 let response = InteractionResponse {
                     kind: InteractionResponseType::UpdateMessage,
                     data: Some(InteractionResponseData {
-                        embeds: Some(vec![build_error_embed("追加可能なロールが見つかりませんでした。")]),
+                        embeds: Some(vec![build_error_embed(
+                            "追加可能なロールが見つかりませんでした。",
+                        )]),
                         components: Some(vec![]),
                         ..Default::default()
                     }),
@@ -90,7 +96,9 @@ pub async fn handle_panel_edit_interaction(
         }
         "role_add_select" => {
             // Handle role selection from role select menu
-            let component_data = data.ok_or(AppError::InvalidInput("コンポーネントデータがありません".into()))?;
+            let component_data = data.ok_or(AppError::InvalidInput(
+                "コンポーネントデータがありません".into(),
+            ))?;
 
             if component_data.values.is_empty() {
                 let response = InteractionResponse {
@@ -125,8 +133,13 @@ pub async fn handle_panel_edit_interaction(
 
             // Add all selected roles
             for value in &component_data.values {
-                let role_id: u64 = value.parse().map_err(|_| AppError::InvalidInput("無効なロールIDです".into()))?;
-                let role_name = role_map.get(&role_id).cloned().unwrap_or_else(|| format!("Role {}", role_id));
+                let role_id: u64 = value
+                    .parse()
+                    .map_err(|_| AppError::InvalidInput("無効なロールIDです".into()))?;
+                let role_name = role_map
+                    .get(&role_id)
+                    .cloned()
+                    .unwrap_or_else(|| format!("Role {}", role_id));
 
                 // Add role with role name as default label
                 let _ = panel_service
@@ -193,7 +206,9 @@ pub async fn handle_panel_edit_interaction(
                 .await?;
         }
         "role_remove_select" => {
-            let component_data = data.ok_or(AppError::InvalidInput("コンポーネントデータがありません".into()))?;
+            let component_data = data.ok_or(AppError::InvalidInput(
+                "コンポーネントデータがありません".into(),
+            ))?;
 
             // Defer update
             let defer = InteractionResponse {
@@ -206,7 +221,9 @@ pub async fn handle_panel_edit_interaction(
 
             // Remove selected roles
             for value in &component_data.values {
-                let role_id: i64 = value.parse().map_err(|_| AppError::InvalidInput("無効なロールIDです".into()))?;
+                let role_id: i64 = value
+                    .parse()
+                    .map_err(|_| AppError::InvalidInput("無効なロールIDです".into()))?;
                 panel_service
                     .remove_role(panel_id, Id::<RoleMarker>::new(role_id as u64))
                     .await?;
@@ -280,8 +297,13 @@ pub async fn handle_panel_edit_interaction(
                 .await?;
         }
         "color_select" => {
-            let component_data = data.ok_or(AppError::InvalidInput("コンポーネントデータがありません".into()))?;
-            let value = component_data.values.first().ok_or(AppError::InvalidInput("カラーが選択されていません".into()))?;
+            let component_data = data.ok_or(AppError::InvalidInput(
+                "コンポーネントデータがありません".into(),
+            ))?;
+            let value = component_data
+                .values
+                .first()
+                .ok_or(AppError::InvalidInput("カラーが選択されていません".into()))?;
 
             if value == "custom" {
                 // Show custom color modal
@@ -290,7 +312,9 @@ pub async fn handle_panel_edit_interaction(
                     .create_response(interaction_id, interaction_token, &response)
                     .await?;
             } else {
-                let color: i32 = value.parse().map_err(|_| AppError::InvalidInput("無効なカラーです".into()))?;
+                let color: i32 = value
+                    .parse()
+                    .map_err(|_| AppError::InvalidInput("無効なカラーです".into()))?;
 
                 // Update color
                 panel_service
@@ -334,7 +358,9 @@ pub async fn handle_panel_edit_interaction(
                     kind: InteractionResponseType::UpdateMessage,
                     data: Some(InteractionResponseData {
                         content: Some(String::new()),
-                        embeds: Some(vec![build_error_embed("Preview するにはロールを追加してください。")]),
+                        embeds: Some(vec![build_error_embed(
+                            "Preview するにはロールを追加してください。",
+                        )]),
                         components: Some(vec![]),
                         ..Default::default()
                     }),
@@ -396,12 +422,22 @@ pub async fn handle_panel_edit_interaction(
         "post" => {
             // Fetch guild channels from Discord API
             let guild_channels = http.guild_channels(guild_id).await?.model().await?;
-            
+
             // Filter to text channels only
             let channels: Vec<(u64, String)> = guild_channels
                 .iter()
-                .filter(|c| matches!(c.kind, ChannelType::GuildText | ChannelType::GuildAnnouncement))
-                .map(|c| (c.id.get(), c.name.clone().unwrap_or_else(|| "unknown".to_string())))
+                .filter(|c| {
+                    matches!(
+                        c.kind,
+                        ChannelType::GuildText | ChannelType::GuildAnnouncement
+                    )
+                })
+                .map(|c| {
+                    (
+                        c.id.get(),
+                        c.name.clone().unwrap_or_else(|| "unknown".to_string()),
+                    )
+                })
                 .take(25)
                 .collect();
 
@@ -410,7 +446,9 @@ pub async fn handle_panel_edit_interaction(
                     kind: InteractionResponseType::UpdateMessage,
                     data: Some(InteractionResponseData {
                         content: Some(String::new()),
-                        embeds: Some(vec![build_error_embed("テキストチャンネルが見つかりませんでした。")]),
+                        embeds: Some(vec![build_error_embed(
+                            "テキストチャンネルが見つかりませんでした。",
+                        )]),
                         components: Some(vec![]),
                         ..Default::default()
                     }),
@@ -437,9 +475,15 @@ pub async fn handle_panel_edit_interaction(
                 .await?;
         }
         "channel_select" => {
-            let component_data = data.ok_or(AppError::InvalidInput("コンポーネントデータがありません".into()))?;
-            let channel_id_str = component_data.values.first().ok_or(AppError::InvalidInput("チャンネルが選択されていません".into()))?;
-            let channel_id: u64 = channel_id_str.parse().map_err(|_| AppError::InvalidInput("無効なチャンネルIDです".into()))?;
+            let component_data = data.ok_or(AppError::InvalidInput(
+                "コンポーネントデータがありません".into(),
+            ))?;
+            let channel_id_str = component_data.values.first().ok_or(AppError::InvalidInput(
+                "チャンネルが選択されていません".into(),
+            ))?;
+            let channel_id: u64 = channel_id_str
+                .parse()
+                .map_err(|_| AppError::InvalidInput("無効なチャンネルIDです".into()))?;
             let channel_id = Id::<ChannelMarker>::new(channel_id);
 
             // Defer response
@@ -489,7 +533,9 @@ pub async fn handle_panel_edit_interaction(
             let response = InteractionResponse {
                 kind: InteractionResponseType::UpdateMessage,
                 data: Some(InteractionResponseData {
-                    content: Some("本当にこのパネルを削除しますか？\nこの操作は取り消せません。".to_string()),
+                    content: Some(
+                        "本当にこのパネルを削除しますか？\nこの操作は取り消せません。".to_string(),
+                    ),
                     embeds: Some(vec![]),
                     components: Some(components),
                     ..Default::default()

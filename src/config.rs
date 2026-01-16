@@ -17,15 +17,15 @@ pub struct Config {
 
 impl Config {
     pub fn from_env() -> Result<Self, ConfigError> {
-        let discord_token = env::var("DISCORD_TOKEN")
-            .map_err(|_| ConfigError::Missing("DISCORD_TOKEN"))?;
+        let discord_token =
+            env::var("DISCORD_TOKEN").map_err(|_| ConfigError::Missing("DISCORD_TOKEN"))?;
 
         if discord_token.is_empty() {
             return Err(ConfigError::Invalid("DISCORD_TOKEN", "must not be empty"));
         }
 
-        let database_url = env::var("DATABASE_URL")
-            .map_err(|_| ConfigError::Missing("DATABASE_URL"))?;
+        let database_url =
+            env::var("DATABASE_URL").map_err(|_| ConfigError::Missing("DATABASE_URL"))?;
 
         if database_url.is_empty() {
             return Err(ConfigError::Invalid("DATABASE_URL", "must not be empty"));
@@ -47,12 +47,11 @@ impl Config {
         let error_webhook_url = env::var("ERROR_WEBHOOK_URL").ok().filter(|s| !s.is_empty());
 
         // Bot info (with defaults)
-        let bot_name = env::var("BOT_NAME")
-            .unwrap_or_else(|_| "Role Panel Bot".to_string());
+        let bot_name = env::var("BOT_NAME").unwrap_or_else(|_| "Role Panel Bot".to_string());
         let bot_description = env::var("BOT_DESCRIPTION")
             .unwrap_or_else(|_| "2025年10月同期会向けに作られたロールパネルBot".to_string());
-        let bot_developer_id = env::var("BOT_DEVELOPER_ID")
-            .unwrap_or_else(|_| "1340270150217236501".to_string());
+        let bot_developer_id =
+            env::var("BOT_DEVELOPER_ID").unwrap_or_else(|_| "1340270150217236501".to_string());
         let bot_github_url = env::var("BOT_GITHUB_URL")
             .unwrap_or_else(|_| "https://github.com/Aqua-218/RolePanel-Bot".to_string());
 
@@ -77,7 +76,10 @@ impl fmt::Debug for Config {
             .field("database_url", &"[REDACTED]")
             .field("health_port", &self.health_port)
             .field("database_max_connections", &self.database_max_connections)
-            .field("error_webhook_url", &self.error_webhook_url.as_ref().map(|_| "[SET]"))
+            .field(
+                "error_webhook_url",
+                &self.error_webhook_url.as_ref().map(|_| "[SET]"),
+            )
             .field("bot_name", &self.bot_name)
             .field("bot_description", &self.bot_description)
             .field("bot_developer_id", &self.bot_developer_id)

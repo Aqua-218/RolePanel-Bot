@@ -6,8 +6,12 @@ use twilight_model::application::interaction::application_command::{
 };
 use twilight_model::channel::message::MessageFlags;
 use twilight_model::guild::Permissions;
-use twilight_model::http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType};
-use twilight_model::id::marker::{ApplicationMarker, ChannelMarker, GuildMarker, InteractionMarker};
+use twilight_model::http::interaction::{
+    InteractionResponse, InteractionResponseData, InteractionResponseType,
+};
+use twilight_model::id::marker::{
+    ApplicationMarker, ChannelMarker, GuildMarker, InteractionMarker,
+};
 use twilight_model::id::Id;
 
 use crate::discord::embed::{build_config_embed, build_error_embed, build_success_embed};
@@ -41,26 +45,26 @@ pub async fn handle_config_command(
     }
 
     // Get subcommand
-    let subcommand = data.options.first().ok_or(AppError::InvalidInput(
-        "サブコマンドがありません".into(),
-    ))?;
+    let subcommand = data
+        .options
+        .first()
+        .ok_or(AppError::InvalidInput("サブコマンドがありません".into()))?;
 
     match subcommand.name.as_str() {
         "audit-channel" => {
             // Get channel option
-            let channel_id: Option<Id<ChannelMarker>> = if let CommandOptionValue::SubCommand(opts) = &subcommand.value {
-                opts.iter()
-                    .find(|o| o.name == "channel")
-                    .and_then(|o| {
+            let channel_id: Option<Id<ChannelMarker>> =
+                if let CommandOptionValue::SubCommand(opts) = &subcommand.value {
+                    opts.iter().find(|o| o.name == "channel").and_then(|o| {
                         if let CommandOptionValue::Channel(id) = &o.value {
                             Some(*id)
                         } else {
                             None
                         }
                     })
-            } else {
-                None
-            };
+                } else {
+                    None
+                };
 
             // Update config
             let audit_channel_id = channel_id.map(|id| id.get() as i64);

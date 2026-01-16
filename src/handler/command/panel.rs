@@ -6,12 +6,16 @@ use twilight_model::application::interaction::application_command::{
 };
 use twilight_model::channel::message::MessageFlags;
 use twilight_model::guild::Permissions;
-use twilight_model::http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType};
+use twilight_model::http::interaction::{
+    InteractionResponse, InteractionResponseData, InteractionResponseType,
+};
 use twilight_model::id::marker::{ApplicationMarker, GuildMarker, InteractionMarker};
 use twilight_model::id::Id;
 
-use crate::discord::embed::{build_edit_interface_embed, build_error_embed, build_panel_list_embed};
 use crate::discord::component::build_edit_interface_components;
+use crate::discord::embed::{
+    build_edit_interface_embed, build_error_embed, build_panel_list_embed,
+};
 use crate::discord::modal::build_panel_create_modal;
 use crate::error::AppError;
 use crate::service::PanelService;
@@ -43,9 +47,10 @@ pub async fn handle_panel_command(
     }
 
     // Get subcommand
-    let subcommand = data.options.first().ok_or(AppError::InvalidInput(
-        "サブコマンドがありません".into(),
-    ))?;
+    let subcommand = data
+        .options
+        .first()
+        .ok_or(AppError::InvalidInput("サブコマンドがありません".into()))?;
 
     match subcommand.name.as_str() {
         "create" => {
@@ -70,7 +75,7 @@ pub async fn handle_panel_command(
 
             // Get panels
             let panels = panel_service.list_panels(guild_id).await?;
-            
+
             // Get role counts for each panel
             let mut role_counts = Vec::new();
             for panel in &panels {

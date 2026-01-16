@@ -9,8 +9,8 @@ use twilight_model::id::marker::{ApplicationMarker, InteractionMarker};
 use twilight_model::id::Id;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
-use crate::error::AppError;
 use super::bot_info::BotInfo;
+use crate::error::AppError;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -26,27 +26,14 @@ pub async fn handle_about_command(
         .title(&info.name)
         .description(&info.description)
         .color(0x5865F2)
-        .field(
-            EmbedFieldBuilder::new("バージョン", format!("`v{}`", VERSION))
-                .inline(),
-        )
-        .field(
-            EmbedFieldBuilder::new("開発者", format!("<@{}>", info.developer_id))
-                .inline(),
-        )
-        .field(
-            EmbedFieldBuilder::new("ライセンス", "OSS (MIT)")
-                .inline(),
-        )
-        .field(
-            EmbedFieldBuilder::new("GitHub", &info.github_url),
-        )
-        .field(
-            EmbedFieldBuilder::new(
-                "技術スタック",
-                "Rust / Twilight / PostgreSQL",
-            ),
-        )
+        .field(EmbedFieldBuilder::new("バージョン", format!("`v{}`", VERSION)).inline())
+        .field(EmbedFieldBuilder::new("開発者", format!("<@{}>", info.developer_id)).inline())
+        .field(EmbedFieldBuilder::new("ライセンス", "OSS (MIT)").inline())
+        .field(EmbedFieldBuilder::new("GitHub", &info.github_url))
+        .field(EmbedFieldBuilder::new(
+            "技術スタック",
+            "Rust / Twilight / PostgreSQL",
+        ))
         .build();
 
     let response = InteractionResponse {

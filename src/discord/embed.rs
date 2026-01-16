@@ -2,7 +2,10 @@ use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder, EmbedFooter
 
 use crate::model::{Panel, PanelRole};
 
-pub fn build_edit_interface_embed(panel: &Panel, roles: &[PanelRole]) -> twilight_model::channel::message::Embed {
+pub fn build_edit_interface_embed(
+    panel: &Panel,
+    roles: &[PanelRole],
+) -> twilight_model::channel::message::Embed {
     let mut info_lines = Vec::new();
 
     // Description
@@ -42,8 +45,18 @@ pub fn build_edit_interface_embed(panel: &Panel, roles: &[PanelRole]) -> twiligh
             .iter()
             .enumerate()
             .map(|(i, role)| {
-                let emoji_str = role.emoji.as_ref().map(|e| format!(" {}", e)).unwrap_or_default();
-                format!("{}. **{}**{}\n　<@&{}>", i + 1, role.label, emoji_str, role.role_id)
+                let emoji_str = role
+                    .emoji
+                    .as_ref()
+                    .map(|e| format!(" {}", e))
+                    .unwrap_or_default();
+                format!(
+                    "{}. **{}**{}\n　<@&{}>",
+                    i + 1,
+                    role.label,
+                    emoji_str,
+                    role.role_id
+                )
             })
             .collect::<Vec<_>>()
             .join("\n")
@@ -55,15 +68,16 @@ pub fn build_edit_interface_embed(panel: &Panel, roles: &[PanelRole]) -> twiligh
     embed.build()
 }
 
-pub fn build_panel_list_embed(panels: &[Panel], role_counts: &[i64]) -> twilight_model::channel::message::Embed {
-    let mut embed = EmbedBuilder::new()
-        .title("Role Panel 一覧")
-        .color(0x5865F2);
+pub fn build_panel_list_embed(
+    panels: &[Panel],
+    role_counts: &[i64],
+) -> twilight_model::channel::message::Embed {
+    let mut embed = EmbedBuilder::new().title("Role Panel 一覧").color(0x5865F2);
 
     if panels.is_empty() {
         embed = embed.description(
             "パネルがありません\n\n\
-            `/panel create` コマンドで新しいパネルを作成してください。"
+            `/panel create` コマンドで新しいパネルを作成してください。",
         );
     } else {
         let mut description = String::new();
@@ -74,7 +88,7 @@ pub fn build_panel_list_embed(panels: &[Panel], role_counts: &[i64]) -> twilight
                 "下書き".to_string()
             };
             let role_count = role_counts.get(i).unwrap_or(&0);
-            
+
             description.push_str(&format!(
                 "**{}. {}**\n\
                  ステータス: {} / ロール: {}個\n\n",
@@ -87,7 +101,10 @@ pub fn build_panel_list_embed(panels: &[Panel], role_counts: &[i64]) -> twilight
         embed = embed.description(description);
     }
 
-    embed = embed.footer(EmbedFooterBuilder::new(format!("全 {} パネル", panels.len())));
+    embed = embed.footer(EmbedFooterBuilder::new(format!(
+        "全 {} パネル",
+        panels.len()
+    )));
 
     embed.build()
 }
@@ -95,9 +112,7 @@ pub fn build_panel_list_embed(panels: &[Panel], role_counts: &[i64]) -> twilight
 pub fn build_config_embed(
     audit_channel_id: Option<i64>,
 ) -> twilight_model::channel::message::Embed {
-    let mut embed = EmbedBuilder::new()
-        .title("サーバー設定")
-        .color(0x5865F2);
+    let mut embed = EmbedBuilder::new().title("サーバー設定").color(0x5865F2);
 
     let audit_value = match audit_channel_id {
         Some(id) => format!("<#{}>\nロール変更が記録されます", id),

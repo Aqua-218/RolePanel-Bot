@@ -165,14 +165,17 @@ impl PanelRepository {
         Ok(())
     }
 
-    pub async fn exists_by_guild_and_name(&self, guild_id: i64, name: &str) -> Result<bool, AppError> {
-        let row: (bool,) = sqlx::query_as(
-            "SELECT EXISTS(SELECT 1 FROM panels WHERE guild_id = $1 AND name = $2)",
-        )
-        .bind(guild_id)
-        .bind(name)
-        .fetch_one(&self.pool)
-        .await?;
+    pub async fn exists_by_guild_and_name(
+        &self,
+        guild_id: i64,
+        name: &str,
+    ) -> Result<bool, AppError> {
+        let row: (bool,) =
+            sqlx::query_as("SELECT EXISTS(SELECT 1 FROM panels WHERE guild_id = $1 AND name = $2)")
+                .bind(guild_id)
+                .bind(name)
+                .fetch_one(&self.pool)
+                .await?;
 
         Ok(row.0)
     }

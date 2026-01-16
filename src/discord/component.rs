@@ -67,7 +67,14 @@ pub fn build_edit_interface_components(panel: &Panel, roles: &[PanelRole]) -> Ve
                 custom_id: Some(format!("panel:{}:post", panel_id)),
                 disabled: roles.is_empty(),
                 emoji: None,
-                label: Some(if panel.is_posted() { "更新" } else { "投稿" }.to_string()),
+                label: Some(
+                    if panel.is_posted() {
+                        "更新"
+                    } else {
+                        "投稿"
+                    }
+                    .to_string(),
+                ),
                 style: ButtonStyle::Success,
                 url: None,
             }),
@@ -403,7 +410,10 @@ mod tests {
             // First row, first button is "Add Role"
             if let Component::ActionRow(row) = &components[0] {
                 if let Component::Button(btn) = &row.components[0] {
-                    assert!(btn.disabled, "Add Role should be disabled when 25 roles exist");
+                    assert!(
+                        btn.disabled,
+                        "Add Role should be disabled when 25 roles exist"
+                    );
                 }
             }
         }
@@ -445,7 +455,10 @@ mod tests {
 
             if let Component::ActionRow(row) = &components[0] {
                 if let Component::Button(btn) = &row.components[1] {
-                    assert!(!btn.disabled, "Remove Role should be enabled when roles exist");
+                    assert!(
+                        !btn.disabled,
+                        "Remove Role should be enabled when roles exist"
+                    );
                 }
             }
         }
@@ -690,9 +703,8 @@ mod tests {
         #[test]
         fn max_values_capped_at_25() {
             let panel_id = Uuid::new_v4();
-            let roles: Vec<(u64, String)> = (0..30)
-                .map(|i| (i as u64, format!("Role {}", i)))
-                .collect();
+            let roles: Vec<(u64, String)> =
+                (0..30).map(|i| (i as u64, format!("Role {}", i))).collect();
 
             let components = build_role_select_menu(panel_id, &roles);
 
@@ -706,10 +718,7 @@ mod tests {
         #[test]
         fn options_count_matches_input() {
             let panel_id = Uuid::new_v4();
-            let roles = vec![
-                (1u64, "Admin".to_string()),
-                (2u64, "Moderator".to_string()),
-            ];
+            let roles = vec![(1u64, "Admin".to_string()), (2u64, "Moderator".to_string())];
 
             let components = build_role_select_menu(panel_id, &roles);
 

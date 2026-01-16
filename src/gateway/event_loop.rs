@@ -11,15 +11,18 @@ use twilight_model::id::marker::ApplicationMarker;
 use twilight_model::id::Id;
 
 use crate::error::AppError;
-use crate::handler::command::{handle_about_command, handle_config_command, handle_help_command, handle_panel_command, handle_ping_command, BotInfo};
+use crate::handler::command::{
+    handle_about_command, handle_config_command, handle_help_command, handle_panel_command,
+    handle_ping_command, BotInfo,
+};
 use crate::handler::interaction::{
-    handle_panel_edit_interaction, handle_panel_modal_submit,
-    handle_role_interaction, handle_role_select_with_values,
+    handle_panel_edit_interaction, handle_panel_modal_submit, handle_role_interaction,
+    handle_role_select_with_values,
 };
 use crate::repository::{GuildConfigRepository, PanelRepository, PanelRoleRepository};
 use crate::service::{
-    AuditService, PanelService, RoleService,
-    notify_error, notify_critical, ErrorNotification, ErrorSeverity,
+    notify_critical, notify_error, AuditService, ErrorNotification, ErrorSeverity, PanelService,
+    RoleService,
 };
 
 pub struct GatewayState {
@@ -91,7 +94,7 @@ pub async fn run_gateway(
                         tracing::info!("Bot is ready! User: {}", ready.user.name);
                         bot_id = Some(ready.user.id);
                         application_id = Some(ready.application.id);
-                        
+
                         let _ = state_tx.send(GatewayState { connected: true });
 
                         // Register commands
@@ -114,31 +117,31 @@ pub async fn run_gateway(
                                 current_app_id,
                             ).await {
                                 tracing::error!("Error handling interaction: {}", e);
-                                
+
                                 // Send error notification with context
                                 let guild_id = interaction.0.guild_id.map(|id| id.get());
                                 let user_id = interaction.0.author_id().map(|id| id.get());
-                                
+
                                 if let Some(notifier) = crate::service::get_global_notifier() {
                                     let mut notification = ErrorNotification::new(
                                         ErrorSeverity::Error,
                                         "Interaction Handler Error",
                                         format!("{}", e),
                                     ).with_source("handle_interaction");
-                                    
+
                                     if let Some(gid) = guild_id {
                                         notification = notification.with_guild(gid);
                                     }
                                     if let Some(uid) = user_id {
                                         notification = notification.with_user(uid);
                                     }
-                                    
+
                                     // Add interaction type info
                                     notification = notification.with_info(
                                         "Interaction Type",
                                         format!("{:?}", interaction.0.kind)
                                     );
-                                    
+
                                     notifier.notify(notification);
                                 }
                             }
@@ -386,9 +389,10 @@ async fn handle_interaction(
         "Interaction must be in a guild".into(),
     ))?;
 
-    let member = interaction.member.as_ref().ok_or(AppError::InvalidInput(
-        "Missing member data".into(),
-    ))?;
+    let member = interaction
+        .member
+        .as_ref()
+        .ok_or(AppError::InvalidInput("Missing member data".into()))?;
 
     let member_permissions = member.permissions.unwrap_or(Permissions::empty());
 
@@ -398,8 +402,12 @@ async fn handle_interaction(
     let config_repo = GuildConfigRepository::new(pool.clone());
 
     let audit_service = AuditService::new(http.clone(), GuildConfigRepository::new(pool.clone()));
-    let panel_service = PanelService::new(http.clone(), panel_repo, PanelRoleRepository::new(pool.clone()));
-    
+    let panel_service = PanelService::new(
+        http.clone(),
+        panel_repo,
+        PanelRoleRepository::new(pool.clone()),
+    );
+
     let role_service = if let Some(bot_id) = bot_id {
         Some(RoleService::new(
             http.clone(),
@@ -492,10 +500,12 @@ async fn handle_interaction(
         InteractionType::MessageComponent => {
             if let Some(InteractionData::MessageComponent(data)) = &interaction.data {
                 let custom_id = &data.custom_id;
-                let user_id = interaction.author_id().ok_or(AppError::InvalidInput(
-                    "Missing user ID".into(),
-                ))?;
-                let message_id = interaction.message.as_ref()
+                let user_id = interaction
+                    .author_id()
+                    .ok_or(AppError::InvalidInput("Missing user ID".into()))?;
+                let message_id = interaction
+                    .message
+                    .as_ref()
                     .map(|m| m.id)
                     .ok_or(AppError::InvalidInput("Missing message".into()))?;
 
@@ -585,8 +595,10 @@ async fn handle_autocomplete(
     data: &twilight_model::application::interaction::application_command::CommandData,
     panel_service: &PanelService,
 ) -> Result<(), AppError> {
-    use twilight_model::http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType};
     use twilight_model::application::interaction::application_command::CommandOptionValue;
+    use twilight_model::http::interaction::{
+        InteractionResponse, InteractionResponseData, InteractionResponseType,
+    };
 
     // Find the focused option
     let focused_value = data
@@ -611,11 +623,13 @@ async fn handle_autocomplete(
 
     let choices: Vec<twilight_model::application::command::CommandOptionChoice> = names
         .into_iter()
-        .map(|name| twilight_model::application::command::CommandOptionChoice {
-            name: name.clone(),
-            name_localizations: None,
-            value: twilight_model::application::command::CommandOptionChoiceValue::String(name),
-        })
+        .map(
+            |name| twilight_model::application::command::CommandOptionChoice {
+                name: name.clone(),
+                name_localizations: None,
+                value: twilight_model::application::command::CommandOptionChoiceValue::String(name),
+            },
+        )
         .collect();
 
     let response = InteractionResponse {

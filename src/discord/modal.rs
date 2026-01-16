@@ -1,5 +1,7 @@
 use twilight_model::channel::message::component::{ActionRow, TextInput, TextInputStyle};
-use twilight_model::http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType};
+use twilight_model::http::interaction::{
+    InteractionResponse, InteractionResponseData, InteractionResponseType,
+};
 use uuid::Uuid;
 
 pub fn build_panel_create_modal() -> InteractionResponse {
@@ -10,8 +12,8 @@ pub fn build_panel_create_modal() -> InteractionResponse {
             title: Some("Panel 作成".to_string()),
             components: Some(vec![
                 twilight_model::channel::message::Component::ActionRow(ActionRow {
-                    components: vec![
-                        twilight_model::channel::message::Component::TextInput(TextInput {
+                    components: vec![twilight_model::channel::message::Component::TextInput(
+                        TextInput {
                             custom_id: "title".to_string(),
                             label: "タイトル".to_string(),
                             max_length: Some(100),
@@ -20,12 +22,12 @@ pub fn build_panel_create_modal() -> InteractionResponse {
                             required: Some(true),
                             style: TextInputStyle::Short,
                             value: None,
-                        }),
-                    ],
+                        },
+                    )],
                 }),
                 twilight_model::channel::message::Component::ActionRow(ActionRow {
-                    components: vec![
-                        twilight_model::channel::message::Component::TextInput(TextInput {
+                    components: vec![twilight_model::channel::message::Component::TextInput(
+                        TextInput {
                             custom_id: "description".to_string(),
                             label: "説明".to_string(),
                             max_length: Some(4000),
@@ -34,8 +36,8 @@ pub fn build_panel_create_modal() -> InteractionResponse {
                             required: Some(false),
                             style: TextInputStyle::Paragraph,
                             value: None,
-                        }),
-                    ],
+                        },
+                    )],
                 }),
             ]),
             ..Default::default()
@@ -46,14 +48,18 @@ pub fn build_panel_create_modal() -> InteractionResponse {
 /// Build modal for configuring individual role labels
 /// Currently unused but kept for future single-role edit feature
 #[allow(dead_code)]
-pub fn build_role_label_modal(panel_id: Uuid, role_id: u64, role_name: &str) -> InteractionResponse {
+pub fn build_role_label_modal(
+    panel_id: Uuid,
+    role_id: u64,
+    role_name: &str,
+) -> InteractionResponse {
     // custom_id format: panel:{uuid}:role_label:{role_id}
     // Max length is 100, UUID is 36 chars, so we have limited space
     let custom_id = format!("panel:{}:role_label:{}", panel_id, role_id);
-    
+
     // Modal title max is 45 chars. "設定: " is 4 chars, leaving 41 for role name
     let title = format!("設定: {}", truncate_chars(role_name, 40));
-    
+
     InteractionResponse {
         kind: InteractionResponseType::Modal,
         data: Some(InteractionResponseData {
@@ -61,8 +67,8 @@ pub fn build_role_label_modal(panel_id: Uuid, role_id: u64, role_name: &str) -> 
             title: Some(title),
             components: Some(vec![
                 twilight_model::channel::message::Component::ActionRow(ActionRow {
-                    components: vec![
-                        twilight_model::channel::message::Component::TextInput(TextInput {
+                    components: vec![twilight_model::channel::message::Component::TextInput(
+                        TextInput {
                             custom_id: "label".to_string(),
                             label: "ラベル".to_string(),
                             max_length: Some(80),
@@ -71,12 +77,12 @@ pub fn build_role_label_modal(panel_id: Uuid, role_id: u64, role_name: &str) -> 
                             required: Some(true),
                             style: TextInputStyle::Short,
                             value: Some(truncate_chars(role_name, 80).to_string()),
-                        }),
-                    ],
+                        },
+                    )],
                 }),
                 twilight_model::channel::message::Component::ActionRow(ActionRow {
-                    components: vec![
-                        twilight_model::channel::message::Component::TextInput(TextInput {
+                    components: vec![twilight_model::channel::message::Component::TextInput(
+                        TextInput {
                             custom_id: "emoji".to_string(),
                             label: "絵文字".to_string(),
                             max_length: Some(100),
@@ -85,12 +91,12 @@ pub fn build_role_label_modal(panel_id: Uuid, role_id: u64, role_name: &str) -> 
                             required: Some(false),
                             style: TextInputStyle::Short,
                             value: None,
-                        }),
-                    ],
+                        },
+                    )],
                 }),
                 twilight_model::channel::message::Component::ActionRow(ActionRow {
-                    components: vec![
-                        twilight_model::channel::message::Component::TextInput(TextInput {
+                    components: vec![twilight_model::channel::message::Component::TextInput(
+                        TextInput {
                             custom_id: "description".to_string(),
                             label: "説明 (Select Menu のみ)".to_string(),
                             max_length: Some(100),
@@ -99,8 +105,8 @@ pub fn build_role_label_modal(panel_id: Uuid, role_id: u64, role_name: &str) -> 
                             required: Some(false),
                             style: TextInputStyle::Short,
                             value: None,
-                        }),
-                    ],
+                        },
+                    )],
                 }),
             ]),
             ..Default::default()
@@ -116,8 +122,8 @@ pub fn build_custom_color_modal(panel_id: Uuid) -> InteractionResponse {
             title: Some("カスタムカラー".to_string()),
             components: Some(vec![
                 twilight_model::channel::message::Component::ActionRow(ActionRow {
-                    components: vec![
-                        twilight_model::channel::message::Component::TextInput(TextInput {
+                    components: vec![twilight_model::channel::message::Component::TextInput(
+                        TextInput {
                             custom_id: "color".to_string(),
                             label: "Hex カラー".to_string(),
                             max_length: Some(7),
@@ -126,8 +132,8 @@ pub fn build_custom_color_modal(panel_id: Uuid) -> InteractionResponse {
                             required: Some(true),
                             style: TextInputStyle::Short,
                             value: None,
-                        }),
-                    ],
+                        },
+                    )],
                 }),
             ]),
             ..Default::default()
@@ -216,7 +222,11 @@ mod tests {
         let modal = build_panel_create_modal();
         let inputs = extract_text_inputs(&modal);
 
-        assert_eq!(inputs.len(), 2, "Expected 2 text inputs (title and description)");
+        assert_eq!(
+            inputs.len(),
+            2,
+            "Expected 2 text inputs (title and description)"
+        );
 
         for input in inputs {
             // Verify max_length is within Discord's limit
@@ -304,7 +314,10 @@ mod tests {
         let inputs = extract_text_inputs(&modal);
         let label_input = inputs.iter().find(|i| i.custom_id == "label").unwrap();
         if let Some(ref value) = label_input.value {
-            assert!(value.chars().count() <= 80, "Label default value should be truncated to 80 chars");
+            assert!(
+                value.chars().count() <= 80,
+                "Label default value should be truncated to 80 chars"
+            );
         }
     }
 
@@ -316,7 +329,11 @@ mod tests {
         let modal = build_role_label_modal(panel_id, role_id, "Test");
         let inputs = extract_text_inputs(&modal);
 
-        assert_eq!(inputs.len(), 3, "Expected 3 text inputs (label, emoji, description)");
+        assert_eq!(
+            inputs.len(),
+            3,
+            "Expected 3 text inputs (label, emoji, description)"
+        );
 
         for input in inputs {
             if let Some(max_len) = input.max_length {

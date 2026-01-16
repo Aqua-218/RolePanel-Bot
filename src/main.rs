@@ -86,8 +86,13 @@ async fn main() {
     let health_pool = pool.clone();
     let health_shutdown_rx = shutdown_rx.clone();
     let health_handle = tokio::spawn(async move {
-        if let Err(e) =
-            run_health_server(config.health_port, health_pool, gateway_state_rx, health_shutdown_rx).await
+        if let Err(e) = run_health_server(
+            config.health_port,
+            health_pool,
+            gateway_state_rx,
+            health_shutdown_rx,
+        )
+        .await
         {
             tracing::error!("Health server error: {}", e);
         }
@@ -104,7 +109,14 @@ async fn main() {
         github_url: config.bot_github_url.clone(),
     };
     let gateway_handle = tokio::spawn(async move {
-        if let Err(e) = run_gateway(gateway_token, gateway_pool, gateway_shutdown_rx, gateway_state_tx, bot_config).await
+        if let Err(e) = run_gateway(
+            gateway_token,
+            gateway_pool,
+            gateway_shutdown_rx,
+            gateway_state_tx,
+            bot_config,
+        )
+        .await
         {
             tracing::error!("Gateway error: {}", e);
         }

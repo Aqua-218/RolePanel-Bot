@@ -133,8 +133,5 @@ async fn handle_request(
 }
 
 async fn check_database(pool: &PgPool) -> bool {
-    sqlx::query("SELECT 1")
-        .execute(pool)
-        .await
-        .is_ok()
+    sqlx::query("SELECT 1").execute(pool).await.is_ok()
 }

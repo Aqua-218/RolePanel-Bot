@@ -97,23 +97,20 @@ impl PanelRoleRepository {
     }
 
     pub async fn count_by_panel(&self, panel_id: Uuid) -> Result<i64, AppError> {
-        let row: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM panel_roles WHERE panel_id = $1",
-        )
-        .bind(panel_id)
-        .fetch_one(&self.pool)
-        .await?;
+        let row: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM panel_roles WHERE panel_id = $1")
+            .bind(panel_id)
+            .fetch_one(&self.pool)
+            .await?;
 
         Ok(row.0)
     }
 
     pub async fn get_max_position(&self, panel_id: Uuid) -> Result<i32, AppError> {
-        let row: (Option<i32>,) = sqlx::query_as(
-            "SELECT MAX(position) FROM panel_roles WHERE panel_id = $1",
-        )
-        .bind(panel_id)
-        .fetch_one(&self.pool)
-        .await?;
+        let row: (Option<i32>,) =
+            sqlx::query_as("SELECT MAX(position) FROM panel_roles WHERE panel_id = $1")
+                .bind(panel_id)
+                .fetch_one(&self.pool)
+                .await?;
 
         Ok(row.0.unwrap_or(-1))
     }

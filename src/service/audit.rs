@@ -115,7 +115,11 @@ impl AuditService {
         removed: &[(Id<RoleMarker>, String)],
         panel_name: &str,
     ) -> Result<(), AppError> {
-        let config = match self.config_repo.find_by_guild(guild_id.get() as i64).await? {
+        let config = match self
+            .config_repo
+            .find_by_guild(guild_id.get() as i64)
+            .await?
+        {
             Some(c) => c,
             None => return Ok(()),
         };
@@ -148,9 +152,10 @@ impl AuditService {
                 .map(|(id, name)| format!("• <@&{}> `{}`", id, name))
                 .collect::<Vec<_>>()
                 .join("\n");
-            embed = embed.field(
-                EmbedFieldBuilder::new(format!("付与 ({})", added.len()), added_str)
-            );
+            embed = embed.field(EmbedFieldBuilder::new(
+                format!("付与 ({})", added.len()),
+                added_str,
+            ));
         }
 
         if !removed.is_empty() {
@@ -159,9 +164,10 @@ impl AuditService {
                 .map(|(id, name)| format!("• <@&{}> `{}`", id, name))
                 .collect::<Vec<_>>()
                 .join("\n");
-            embed = embed.field(
-                EmbedFieldBuilder::new(format!("解除 ({})", removed.len()), removed_str)
-            );
+            embed = embed.field(EmbedFieldBuilder::new(
+                format!("解除 ({})", removed.len()),
+                removed_str,
+            ));
         }
 
         // Add timestamp and footer
@@ -174,11 +180,7 @@ impl AuditService {
 
         let embed = embed.build();
 
-        match self
-            .http
-            .create_message(audit_channel_id)
-            .embeds(&[embed])
-        {
+        match self.http.create_message(audit_channel_id).embeds(&[embed]) {
             Ok(req) => {
                 if let Err(e) = req.await {
                     tracing::warn!("Failed to send audit log: {}", e);

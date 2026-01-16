@@ -3,8 +3,12 @@ use std::sync::Arc;
 use twilight_http::Client as HttpClient;
 use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
 use twilight_model::channel::message::MessageFlags;
-use twilight_model::http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType};
-use twilight_model::id::marker::{ApplicationMarker, GuildMarker, InteractionMarker, MessageMarker, RoleMarker, UserMarker};
+use twilight_model::http::interaction::{
+    InteractionResponse, InteractionResponseData, InteractionResponseType,
+};
+use twilight_model::id::marker::{
+    ApplicationMarker, GuildMarker, InteractionMarker, MessageMarker, RoleMarker, UserMarker,
+};
 use twilight_model::id::Id;
 use uuid::Uuid;
 
@@ -31,7 +35,9 @@ pub async fn handle_role_interaction(
     // - Confirm: role:{panel_id}:confirm
     let parts: Vec<&str> = custom_id.split(':').collect();
     if parts.len() < 3 || parts[0] != "role" {
-        return Err(AppError::InvalidInput("無効な custom ID フォーマットです".into()));
+        return Err(AppError::InvalidInput(
+            "無効な custom ID フォーマットです".into(),
+        ));
     }
 
     let panel_id: Uuid = parts[1]
@@ -185,13 +191,7 @@ pub async fn handle_role_select_with_values(
 
     // Sync roles
     match role_service
-        .sync_roles(
-            guild_id,
-            user_id,
-            panel_id,
-            selected_role_ids,
-            &panel.name,
-        )
+        .sync_roles(guild_id, user_id, panel_id, selected_role_ids, &panel.name)
         .await
     {
         Ok(result) => {
