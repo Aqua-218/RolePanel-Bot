@@ -76,11 +76,33 @@ impl PanelService {
             .ok_or(AppError::NotFound("Panel"))
     }
 
+    pub async fn get_panel_in_guild(
+        &self,
+        panel_id: Uuid,
+        guild_id: Id<GuildMarker>,
+    ) -> Result<Panel, AppError> {
+        let panel = self.get_panel(panel_id).await?;
+        if panel.guild_id != guild_id.get() as i64 {
+            return Err(AppError::NotFound("Panel"));
+        }
+        Ok(panel)
+    }
+
     pub async fn get_panel_with_roles(
         &self,
         panel_id: Uuid,
     ) -> Result<(Panel, Vec<PanelRole>), AppError> {
         let panel = self.get_panel(panel_id).await?;
+        let roles = self.panel_role_repo.list_by_panel(panel_id).await?;
+        Ok((panel, roles))
+    }
+
+    pub async fn get_panel_with_roles_in_guild(
+        &self,
+        panel_id: Uuid,
+        guild_id: Id<GuildMarker>,
+    ) -> Result<(Panel, Vec<PanelRole>), AppError> {
+        let panel = self.get_panel_in_guild(panel_id, guild_id).await?;
         let roles = self.panel_role_repo.list_by_panel(panel_id).await?;
         Ok((panel, roles))
     }

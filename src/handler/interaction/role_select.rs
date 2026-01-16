@@ -38,7 +38,7 @@ pub async fn handle_role_interaction(
         .parse()
         .map_err(|_| AppError::InvalidInput("無効なパネルIDです".into()))?;
 
-    let panel = panel_service.get_panel(panel_id).await?;
+    let panel = panel_service.get_panel_in_guild(panel_id, guild_id).await?;
 
     // Determine action type based on format
     // If parts[3] == "toggle", it's a button click: role:{panel_id}:{role_id}:toggle
@@ -162,7 +162,7 @@ pub async fn handle_role_select_with_values(
     panel_service: &PanelService,
     role_service: &RoleService,
 ) -> Result<(), AppError> {
-    let panel = panel_service.get_panel(panel_id).await?;
+    let panel = panel_service.get_panel_in_guild(panel_id, guild_id).await?;
 
     // Defer ephemeral response
     let defer = InteractionResponse {

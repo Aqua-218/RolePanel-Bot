@@ -42,6 +42,9 @@ pub async fn handle_panel_edit_interaction(
         .map_err(|_| AppError::InvalidInput("Invalid panel ID".into()))?;
     let action = parts[2];
 
+    // Ensure panel belongs to this guild
+    panel_service.get_panel_in_guild(panel_id, guild_id).await?;
+
     match action {
         "add_role" => {
             // Fetch guild roles from Discord API
@@ -138,7 +141,9 @@ pub async fn handle_panel_edit_interaction(
             }
 
             // Update the edit interface
-            let (panel, roles) = panel_service.get_panel_with_roles(panel_id).await?;
+            let (panel, roles) = panel_service
+                .get_panel_with_roles_in_guild(panel_id, guild_id)
+                .await?;
             let embed = build_edit_interface_embed(&panel, &roles);
             let components = build_edit_interface_components(&panel, &roles);
 
@@ -153,7 +158,9 @@ pub async fn handle_panel_edit_interaction(
                 .await?;
         }
         "remove_role" => {
-            let (_panel, roles) = panel_service.get_panel_with_roles(panel_id).await?;
+            let (_panel, roles) = panel_service
+                .get_panel_with_roles_in_guild(panel_id, guild_id)
+                .await?;
 
             if roles.is_empty() {
                 let response = InteractionResponse {
@@ -206,7 +213,9 @@ pub async fn handle_panel_edit_interaction(
             }
 
             // Update the edit interface
-            let (panel, roles) = panel_service.get_panel_with_roles(panel_id).await?;
+            let (panel, roles) = panel_service
+                .get_panel_with_roles_in_guild(panel_id, guild_id)
+                .await?;
             let embed = build_edit_interface_embed(&panel, &roles);
             let components = build_edit_interface_components(&panel, &roles);
 
@@ -222,7 +231,7 @@ pub async fn handle_panel_edit_interaction(
         }
         "style" => {
             // Toggle style
-            let panel = panel_service.get_panel(panel_id).await?;
+            let panel = panel_service.get_panel_in_guild(panel_id, guild_id).await?;
             let new_style = panel.style.toggle();
 
             panel_service
@@ -236,7 +245,9 @@ pub async fn handle_panel_edit_interaction(
                 .await?;
 
             // Update edit interface
-            let (panel, roles) = panel_service.get_panel_with_roles(panel_id).await?;
+            let (panel, roles) = panel_service
+                .get_panel_with_roles_in_guild(panel_id, guild_id)
+                .await?;
             let embed = build_edit_interface_embed(&panel, &roles);
             let components = build_edit_interface_components(&panel, &roles);
 
@@ -293,7 +304,9 @@ pub async fn handle_panel_edit_interaction(
                     .await?;
 
                 // Update edit interface
-                let (panel, roles) = panel_service.get_panel_with_roles(panel_id).await?;
+                let (panel, roles) = panel_service
+                    .get_panel_with_roles_in_guild(panel_id, guild_id)
+                    .await?;
                 let embed = build_edit_interface_embed(&panel, &roles);
                 let components = build_edit_interface_components(&panel, &roles);
 
@@ -312,7 +325,9 @@ pub async fn handle_panel_edit_interaction(
             }
         }
         "preview" => {
-            let (panel, roles) = panel_service.get_panel_with_roles(panel_id).await?;
+            let (panel, roles) = panel_service
+                .get_panel_with_roles_in_guild(panel_id, guild_id)
+                .await?;
 
             if roles.is_empty() {
                 let response = InteractionResponse {
@@ -359,7 +374,9 @@ pub async fn handle_panel_edit_interaction(
                 .await?;
         }
         "back_to_edit" => {
-            let (panel, roles) = panel_service.get_panel_with_roles(panel_id).await?;
+            let (panel, roles) = panel_service
+                .get_panel_with_roles_in_guild(panel_id, guild_id)
+                .await?;
             let embed = build_edit_interface_embed(&panel, &roles);
             let components = build_edit_interface_components(&panel, &roles);
 
@@ -437,7 +454,9 @@ pub async fn handle_panel_edit_interaction(
             // Post panel
             match panel_service.post_panel(panel_id, channel_id).await {
                 Ok(_) => {
-                    let (panel, roles) = panel_service.get_panel_with_roles(panel_id).await?;
+                    let (panel, roles) = panel_service
+                        .get_panel_with_roles_in_guild(panel_id, guild_id)
+                        .await?;
                     let embed = build_edit_interface_embed(&panel, &roles);
                     let components = build_edit_interface_components(&panel, &roles);
 
@@ -505,7 +524,9 @@ pub async fn handle_panel_edit_interaction(
         }
         "delete_cancel" | "back" => {
             // Update with edit interface (go back to main panel edit view)
-            let (panel, roles) = panel_service.get_panel_with_roles(panel_id).await?;
+            let (panel, roles) = panel_service
+                .get_panel_with_roles_in_guild(panel_id, guild_id)
+                .await?;
             let embed = build_edit_interface_embed(&panel, &roles);
             let components = build_edit_interface_components(&panel, &roles);
 
@@ -597,6 +618,9 @@ pub async fn handle_panel_modal_submit(
             .parse()
             .map_err(|_| AppError::InvalidInput("Invalid role ID".into()))?;
 
+        // Ensure panel belongs to this guild
+        panel_service.get_panel_in_guild(panel_id, guild_id).await?;
+
         let label = data
             .components
             .iter()
@@ -635,7 +659,9 @@ pub async fn handle_panel_modal_submit(
             .await?;
 
         // Show updated edit interface
-        let (panel, roles) = panel_service.get_panel_with_roles(panel_id).await?;
+        let (panel, roles) = panel_service
+            .get_panel_with_roles_in_guild(panel_id, guild_id)
+            .await?;
         let embed = build_edit_interface_embed(&panel, &roles);
         let components = build_edit_interface_components(&panel, &roles);
 
@@ -656,6 +682,9 @@ pub async fn handle_panel_modal_submit(
         let panel_id: Uuid = parts[1]
             .parse()
             .map_err(|_| AppError::InvalidInput("Invalid panel ID".into()))?;
+
+        // Ensure panel belongs to this guild
+        panel_service.get_panel_in_guild(panel_id, guild_id).await?;
 
         let color_str = data
             .components
@@ -682,7 +711,9 @@ pub async fn handle_panel_modal_submit(
             .await?;
 
         // Show updated edit interface
-        let (panel, roles) = panel_service.get_panel_with_roles(panel_id).await?;
+        let (panel, roles) = panel_service
+            .get_panel_with_roles_in_guild(panel_id, guild_id)
+            .await?;
         let embed = build_edit_interface_embed(&panel, &roles);
         let components = build_edit_interface_components(&panel, &roles);
 
