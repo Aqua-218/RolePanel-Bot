@@ -438,7 +438,6 @@ pub async fn handle_panel_edit_interaction(
                         c.name.clone().unwrap_or_else(|| "unknown".to_string()),
                     )
                 })
-                .take(25)
                 .collect();
 
             if channels.is_empty() {
@@ -459,7 +458,66 @@ pub async fn handle_panel_edit_interaction(
                 return Ok(());
             }
 
-            let components = build_channel_select_menu(panel_id, &channels);
+            let components = build_channel_select_menu(panel_id, &channels, 0);
+
+            let response = InteractionResponse {
+                kind: InteractionResponseType::UpdateMessage,
+                data: Some(InteractionResponseData {
+                    content: Some("投稿先のチャンネルを選択してください:".to_string()),
+                    embeds: Some(vec![]),
+                    components: Some(components),
+                    ..Default::default()
+                }),
+            };
+            http.interaction(application_id)
+                .create_response(interaction_id, interaction_token, &response)
+                .await?;
+        }
+        "channel_page" => {
+            let page = parts
+                .get(3)
+                .and_then(|value| value.parse::<usize>().ok())
+                .unwrap_or(0);
+
+            // Fetch guild channels from Discord API
+            let guild_channels = http.guild_channels(guild_id).await?.model().await?;
+
+            // Filter to text channels only
+            let channels: Vec<(u64, String)> = guild_channels
+                .iter()
+                .filter(|c| {
+                    matches!(
+                        c.kind,
+                        ChannelType::GuildText | ChannelType::GuildAnnouncement
+                    )
+                })
+                .map(|c| {
+                    (
+                        c.id.get(),
+                        c.name.clone().unwrap_or_else(|| "unknown".to_string()),
+                    )
+                })
+                .collect();
+
+            if channels.is_empty() {
+                let response = InteractionResponse {
+                    kind: InteractionResponseType::UpdateMessage,
+                    data: Some(InteractionResponseData {
+                        content: Some(String::new()),
+                        embeds: Some(vec![build_error_embed(
+                            "テキストチャンネルが見つかりませんでした。",
+                        )]),
+                        components: Some(vec![]),
+                        ..Default::default()
+                    }),
+                };
+                http.interaction(application_id)
+                    .create_response(interaction_id, interaction_token, &response)
+                    .await?;
+                return Ok(());
+            }
+
+            let components = build_channel_select_menu(panel_id, &channels, page);
 
             let response = InteractionResponse {
                 kind: InteractionResponseType::UpdateMessage,
@@ -630,9 +688,26 @@ pub async fn handle_panel_modal_submit(
             .cloned();
 
         // Create panel
-        let panel = panel_service
+        let panel = match panel_service
             .create_panel(guild_id, title.clone(), description)
-            .await?;
+            .await
+        {
+            Ok(panel) => panel,
+            Err(e) => {
+                let response = InteractionResponse {
+                    kind: InteractionResponseType::ChannelMessageWithSource,
+                    data: Some(InteractionResponseData {
+                        embeds: Some(vec![build_error_embed(e.user_message())]),
+                        flags: Some(MessageFlags::EPHEMERAL),
+                        ..Default::default()
+                    }),
+                };
+                http.interaction(application_id)
+                    .create_response(interaction_id, interaction_token, &response)
+                    .await?;
+                return Ok(());
+            }
+        };
 
         let roles = panel_service.get_panel_roles(panel.id).await?;
         let embed = build_edit_interface_embed(&panel, &roles);

@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use twilight_http::api_error::ApiError;
+use twilight_http::error::ErrorType;
 use twilight_http::Client as HttpClient;
 use twilight_model::channel::message::component::{
     ActionRow, Button, ButtonStyle, Component, SelectMenu, SelectMenuOption,
@@ -271,37 +273,65 @@ impl PanelService {
             let message_id = Id::<MessageMarker>::new(message_id as u64);
             let old_channel_id = Id::<ChannelMarker>::new(panel.channel_id.unwrap() as u64);
 
-            self.http
+            let update_result = self
+                .http
                 .update_message(old_channel_id, message_id)
                 .embeds(Some(&[embed.clone()]))
                 .map_err(|e| AppError::Discord(e.to_string()))?
                 .components(Some(&components))
                 .map_err(|e| AppError::Discord(e.to_string()))?
-                .await?;
+                .await;
 
-            // If channel changed, we need to delete old and create new
-            if old_channel_id != channel_id {
-                if let Err(e) = self.http.delete_message(old_channel_id, message_id).await {
-                    tracing::warn!("Failed to delete old panel message: {}", e);
+            match update_result {
+                Ok(_) => {
+                    // If channel changed, we need to delete old and create new
+                    if old_channel_id != channel_id {
+                        if let Err(e) = self.http.delete_message(old_channel_id, message_id).await {
+                            tracing::warn!("Failed to delete old panel message: {}", e);
+                        }
+
+                        let message = self
+                            .http
+                            .create_message(channel_id)
+                            .embeds(&[embed])
+                            .map_err(|e| AppError::Discord(e.to_string()))?
+                            .components(&components)
+                            .map_err(|e| AppError::Discord(e.to_string()))?
+                            .await?
+                            .model()
+                            .await?;
+
+                        let update = PanelUpdate {
+                            channel_id: Some(Some(channel_id.get() as i64)),
+                            message_id: Some(Some(message.id.get() as i64)),
+                            ..Default::default()
+                        };
+                        self.panel_repo.update(panel_id, &update).await?;
+                    }
                 }
+                Err(e) => {
+                    if is_unknown_message_error(&e) {
+                        let message = self
+                            .http
+                            .create_message(channel_id)
+                            .embeds(&[embed])
+                            .map_err(|e| AppError::Discord(e.to_string()))?
+                            .components(&components)
+                            .map_err(|e| AppError::Discord(e.to_string()))?
+                            .await?
+                            .model()
+                            .await?;
 
-                let message = self
-                    .http
-                    .create_message(channel_id)
-                    .embeds(&[embed])
-                    .map_err(|e| AppError::Discord(e.to_string()))?
-                    .components(&components)
-                    .map_err(|e| AppError::Discord(e.to_string()))?
-                    .await?
-                    .model()
-                    .await?;
-
-                let update = PanelUpdate {
-                    channel_id: Some(Some(channel_id.get() as i64)),
-                    message_id: Some(Some(message.id.get() as i64)),
-                    ..Default::default()
-                };
-                self.panel_repo.update(panel_id, &update).await?;
+                        let update = PanelUpdate {
+                            channel_id: Some(Some(channel_id.get() as i64)),
+                            message_id: Some(Some(message.id.get() as i64)),
+                            ..Default::default()
+                        };
+                        self.panel_repo.update(panel_id, &update).await?;
+                    } else {
+                        return Err(AppError::Discord(e.to_string()));
+                    }
+                }
             }
         } else {
             // Create new message
@@ -448,6 +478,15 @@ impl PanelService {
                 components: vec![Component::Button(confirm_button)],
             }),
         ]
+    }
+}
+
+fn is_unknown_message_error(err: &twilight_http::Error) -> bool {
+    match err.kind() {
+        ErrorType::Response { error, .. } => {
+            matches!(error, ApiError::General(general) if general.code == 10008)
+        }
+        _ => false,
     }
 }
 

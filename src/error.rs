@@ -61,7 +61,7 @@ impl From<DeserializeBodyError> for AppError {
 impl AppError {
     pub fn user_message(&self) -> &str {
         match self {
-            AppError::NameExists => "この名前のパネルは既に存在します。",
+            AppError::NameExists => "同じパネルがあります！/panel list を見てみてね。",
             AppError::NotFound(resource) => match *resource {
                 "Panel" => "パネルが見つかりませんでした。",
                 "Role" => "ロールが見つかりませんでした。",
@@ -129,7 +129,10 @@ mod tests {
     #[test]
     fn user_message_name_exists() {
         let err = AppError::NameExists;
-        assert_eq!(err.user_message(), "この名前のパネルは既に存在します。");
+        assert_eq!(
+            err.user_message(),
+            "同じパネルがあります！/panel list を見てみてね。"
+        );
     }
 
     #[test]

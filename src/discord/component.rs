@@ -209,8 +209,24 @@ pub fn build_delete_confirmation(panel_id: Uuid) -> Vec<Component> {
     })]
 }
 
-pub fn build_channel_select_menu(panel_id: Uuid, channels: &[(u64, String)]) -> Vec<Component> {
-    let options: Vec<SelectMenuOption> = channels
+pub fn build_channel_select_menu(
+    panel_id: Uuid,
+    channels: &[(u64, String)],
+    page: usize,
+) -> Vec<Component> {
+    const PAGE_SIZE: usize = 25;
+
+    if channels.is_empty() {
+        // Return empty if no channels available
+        return vec![];
+    }
+
+    let total_pages = (channels.len() + PAGE_SIZE - 1) / PAGE_SIZE;
+    let page = page.min(total_pages.saturating_sub(1));
+    let start = page * PAGE_SIZE;
+    let end = (start + PAGE_SIZE).min(channels.len());
+
+    let options: Vec<SelectMenuOption> = channels[start..end]
         .iter()
         .map(|(id, name)| SelectMenuOption {
             default: false,
@@ -221,22 +237,47 @@ pub fn build_channel_select_menu(panel_id: Uuid, channels: &[(u64, String)]) -> 
         })
         .collect();
 
-    if options.is_empty() {
-        // Return empty if no channels available
-        return vec![];
-    }
+    let mut components = vec![Component::ActionRow(ActionRow {
+        components: vec![Component::SelectMenu(SelectMenu {
+            custom_id: format!("panel:{}:channel_select:{}", panel_id, page),
+            disabled: false,
+            max_values: Some(1),
+            min_values: Some(1),
+            options,
+            placeholder: Some("チャンネルを選択...".to_string()),
+        })],
+    })];
 
-    vec![
+    let navigation_row = if total_pages > 1 {
         Component::ActionRow(ActionRow {
-            components: vec![Component::SelectMenu(SelectMenu {
-                custom_id: format!("panel:{}:channel_select", panel_id),
-                disabled: false,
-                max_values: Some(1),
-                min_values: Some(1),
-                options,
-                placeholder: Some("チャンネルを選択...".to_string()),
-            })],
-        }),
+            components: vec![
+                Component::Button(Button {
+                    custom_id: Some(format!("panel:{}:channel_page:{}", panel_id, page.saturating_sub(1))),
+                    disabled: page == 0,
+                    emoji: None,
+                    label: Some("前へ".to_string()),
+                    style: ButtonStyle::Secondary,
+                    url: None,
+                }),
+                Component::Button(Button {
+                    custom_id: Some(format!("panel:{}:channel_page:{}", panel_id, page + 1)),
+                    disabled: page + 1 >= total_pages,
+                    emoji: None,
+                    label: Some("次へ".to_string()),
+                    style: ButtonStyle::Secondary,
+                    url: None,
+                }),
+                Component::Button(Button {
+                    custom_id: Some(format!("panel:{}:back", panel_id)),
+                    disabled: false,
+                    emoji: None,
+                    label: Some("戻る".to_string()),
+                    style: ButtonStyle::Secondary,
+                    url: None,
+                }),
+            ],
+        })
+    } else {
         Component::ActionRow(ActionRow {
             components: vec![Component::Button(Button {
                 custom_id: Some(format!("panel:{}:back", panel_id)),
@@ -246,8 +287,12 @@ pub fn build_channel_select_menu(panel_id: Uuid, channels: &[(u64, String)]) -> 
                 style: ButtonStyle::Secondary,
                 url: None,
             })],
-        }),
-    ]
+        })
+    };
+
+    components.push(navigation_row);
+
+    components
 }
 
 pub fn build_role_select_menu(panel_id: Uuid, roles: &[(u64, String)]) -> Vec<Component> {
@@ -661,7 +706,7 @@ mod tests {
             let panel_id = Uuid::new_v4();
             let channels: Vec<(u64, String)> = vec![];
 
-            let components = build_channel_select_menu(panel_id, &channels);
+            let components = build_channel_select_menu(panel_id, &channels, 0);
 
             assert!(components.is_empty());
         }
@@ -674,7 +719,7 @@ mod tests {
                 (222u64, "announcements".to_string()),
             ];
 
-            let components = build_channel_select_menu(panel_id, &channels);
+            let components = build_channel_select_menu(panel_id, &channels, 0);
 
             assert_eq!(components.len(), 2);
             if let Component::ActionRow(row) = &components[0] {
@@ -682,6 +727,22 @@ mod tests {
                     assert_eq!(menu.options.len(), 2);
                     // Labels should have # prefix
                     assert!(menu.options[0].label.starts_with('#'));
+                }
+            }
+        }
+
+        #[test]
+        fn paginates_channels_over_25() {
+            let panel_id = Uuid::new_v4();
+            let channels: Vec<(u64, String)> = (0..30)
+                .map(|i| (i as u64, format!("chan-{}", i)))
+                .collect();
+
+            let components = build_channel_select_menu(panel_id, &channels, 0);
+
+            if let Component::ActionRow(row) = &components[0] {
+                if let Component::SelectMenu(menu) = &row.components[0] {
+                    assert_eq!(menu.options.len(), 25);
                 }
             }
         }
