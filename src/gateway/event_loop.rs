@@ -408,16 +408,14 @@ async fn handle_interaction(
         PanelRoleRepository::new(pool.clone()),
     );
 
-    let role_service = if let Some(bot_id) = bot_id {
-        Some(RoleService::new(
+    let role_service = bot_id.map(|bot_id| {
+        RoleService::new(
             http.clone(),
             PanelRoleRepository::new(pool.clone()),
             audit_service,
             bot_id,
-        ))
-    } else {
-        None
-    };
+        )
+    });
 
     match interaction.kind {
         InteractionType::ApplicationCommand => {

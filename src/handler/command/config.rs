@@ -18,6 +18,7 @@ use crate::discord::embed::{build_config_embed, build_error_embed, build_success
 use crate::error::AppError;
 use crate::repository::GuildConfigRepository;
 
+#[allow(clippy::too_many_arguments)]
 pub async fn handle_config_command(
     http: Arc<HttpClient>,
     application_id: Id<ApplicationMarker>,

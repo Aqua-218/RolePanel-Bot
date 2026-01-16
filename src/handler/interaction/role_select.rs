@@ -16,6 +16,7 @@ use crate::discord::embed::{build_error_embed, build_success_embed};
 use crate::error::AppError;
 use crate::service::{PanelService, RoleService};
 
+#[allow(clippy::too_many_arguments)]
 pub async fn handle_role_interaction(
     http: Arc<HttpClient>,
     application_id: Id<ApplicationMarker>,
@@ -156,6 +157,7 @@ pub async fn handle_role_interaction(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn handle_role_select_with_values(
     http: Arc<HttpClient>,
     application_id: Id<ApplicationMarker>,

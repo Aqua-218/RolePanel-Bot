@@ -2,9 +2,10 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type, PartialEq, Eq, Default)]
 #[sqlx(type_name = "VARCHAR", rename_all = "snake_case")]
 pub enum PanelStyle {
+    #[default]
     Button,
     SelectMenu,
 }
@@ -36,12 +37,6 @@ impl PanelStyle {
             PanelStyle::Button => PanelStyle::SelectMenu,
             PanelStyle::SelectMenu => PanelStyle::Button,
         }
-    }
-}
-
-impl Default for PanelStyle {
-    fn default() -> Self {
-        PanelStyle::Button
     }
 }
 

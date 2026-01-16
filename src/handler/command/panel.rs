@@ -20,6 +20,7 @@ use crate::discord::modal::build_panel_create_modal;
 use crate::error::AppError;
 use crate::service::PanelService;
 
+#[allow(clippy::too_many_arguments)]
 pub async fn handle_panel_command(
     http: Arc<HttpClient>,
     application_id: Id<ApplicationMarker>,

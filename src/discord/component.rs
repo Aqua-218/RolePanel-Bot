@@ -221,7 +221,7 @@ pub fn build_channel_select_menu(
         return vec![];
     }
 
-    let total_pages = (channels.len() + PAGE_SIZE - 1) / PAGE_SIZE;
+    let total_pages = channels.len().div_ceil(PAGE_SIZE);
     let page = page.min(total_pages.saturating_sub(1));
     let start = page * PAGE_SIZE;
     let end = (start + PAGE_SIZE).min(channels.len());

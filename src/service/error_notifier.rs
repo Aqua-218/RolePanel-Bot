@@ -254,7 +254,7 @@ impl ErrorNotifier {
         for (name, value) in &notification.additional_info {
             fields.push(EmbedField {
                 name: name.clone(),
-                value: Self::truncate_field(&value, 1024),
+                value: Self::truncate_field(value, 1024),
                 inline: false,
             });
         }

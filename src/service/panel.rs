@@ -276,7 +276,7 @@ impl PanelService {
             let update_result = self
                 .http
                 .update_message(old_channel_id, message_id)
-                .embeds(Some(&[embed.clone()]))
+                .embeds(Some(std::slice::from_ref(&embed)))
                 .map_err(|e| AppError::Discord(e.to_string()))?
                 .components(Some(&components))
                 .map_err(|e| AppError::Discord(e.to_string()))?

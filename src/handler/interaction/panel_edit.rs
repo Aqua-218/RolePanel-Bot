@@ -25,6 +25,7 @@ use crate::error::AppError;
 use crate::model::PanelUpdate;
 use crate::service::PanelService;
 
+#[allow(clippy::too_many_arguments)]
 pub async fn handle_panel_edit_interaction(
     http: Arc<HttpClient>,
     application_id: Id<ApplicationMarker>,
@@ -675,6 +676,7 @@ pub async fn handle_panel_edit_interaction(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn handle_panel_modal_submit(
     http: Arc<HttpClient>,
     application_id: Id<ApplicationMarker>,
