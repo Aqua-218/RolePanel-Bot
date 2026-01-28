@@ -24,6 +24,10 @@
 | RUST_LOG | ログレベル | No | info |
 | HEALTH_PORT | ヘルスサーバーポート | No | 8080 |
 | DATABASE_MAX_CONNECTIONS | コネクションプールサイズ | No | 5 |
+| ERROR_WEBHOOK_URL | エラー通知Webhook | No | - |
+| BOT_NAME | Bot名 | No | Role Panel Bot |
+| BOT_DESCRIPTION | Bot説明 | No | 2025年10月同期会向けに作られたロールパネルBot |
+| BOT_GITHUB_URL | GitHub URL | No | https://github.com/Aqua-218/RolePanel-Bot |
 
 ## 開発
 

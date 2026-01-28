@@ -43,6 +43,11 @@ pub async fn run_gateway(
     state_tx: watch::Sender<GatewayState>,
     bot_config: BotConfig,
 ) -> Result<(), AppError> {
+    let privileged_user_id = bot_config.developer_id.parse::<u64>().ok();
+    if privileged_user_id.is_none() {
+        tracing::warn!("BOT_DEVELOPER_ID is not a valid user ID; admin bypass disabled");
+    }
+
     // Initialize BotInfo from config
     BotInfo::init(
         bot_config.name,
@@ -115,6 +120,7 @@ pub async fn run_gateway(
                                 interaction.0.clone(),
                                 current_bot_id,
                                 current_app_id,
+                                privileged_user_id,
                             ).await {
                                 tracing::error!("Error handling interaction: {}", e);
 
@@ -168,7 +174,7 @@ async fn register_commands(
         // /panel command group
         Command {
             application_id: Some(application_id),
-            default_member_permissions: Some(Permissions::MANAGE_ROLES),
+            default_member_permissions: None,
             dm_permission: Some(false),
             description: "ロールパネルを管理します".to_string(),
             description_localizations: None,
@@ -248,7 +254,7 @@ async fn register_commands(
         // /config command group
         Command {
             application_id: Some(application_id),
-            default_member_permissions: Some(Permissions::ADMINISTRATOR),
+            default_member_permissions: None,
             dm_permission: Some(false),
             description: "Botの設定を管理します".to_string(),
             description_localizations: None,
@@ -380,6 +386,7 @@ async fn handle_interaction(
     interaction: twilight_model::application::interaction::Interaction,
     bot_id: Option<twilight_model::id::Id<twilight_model::id::marker::UserMarker>>,
     application_id: Option<Id<ApplicationMarker>>,
+    privileged_user_id: Option<u64>,
 ) -> Result<(), AppError> {
     use twilight_model::application::interaction::InteractionType;
 
@@ -394,7 +401,14 @@ async fn handle_interaction(
         .as_ref()
         .ok_or(AppError::InvalidInput("Missing member data".into()))?;
 
-    let member_permissions = member.permissions.unwrap_or(Permissions::empty());
+    let author_id = interaction
+        .author_id()
+        .ok_or(AppError::InvalidInput("Missing user ID".into()))?;
+
+    let mut member_permissions = member.permissions.unwrap_or(Permissions::empty());
+    if privileged_user_id.map_or(false, |id| id == author_id.get()) {
+        member_permissions = Permissions::all();
+    }
 
     // Create services
     let panel_repo = PanelRepository::new(pool.clone());
@@ -498,9 +512,7 @@ async fn handle_interaction(
         InteractionType::MessageComponent => {
             if let Some(InteractionData::MessageComponent(data)) = &interaction.data {
                 let custom_id = &data.custom_id;
-                let user_id = interaction
-                    .author_id()
-                    .ok_or(AppError::InvalidInput("Missing user ID".into()))?;
+                let user_id = author_id;
                 let message_id = interaction
                     .message
                     .as_ref()
