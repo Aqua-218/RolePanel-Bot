@@ -7,7 +7,7 @@ use twilight_http::Client as HttpClient;
 use twilight_model::application::command::{Command, CommandOption, CommandType};
 use twilight_model::application::interaction::InteractionData;
 use twilight_model::guild::Permissions;
-use twilight_model::id::marker::ApplicationMarker;
+use twilight_model::id::marker::{ApplicationMarker, GuildMarker};
 use twilight_model::id::Id;
 
 use crate::error::AppError;
@@ -34,6 +34,7 @@ pub struct BotConfig {
     pub description: String,
     pub developer_id: String,
     pub github_url: String,
+    pub command_guild_id: Option<u64>,
 }
 
 pub async fn run_gateway(
@@ -44,6 +45,7 @@ pub async fn run_gateway(
     bot_config: BotConfig,
 ) -> Result<(), AppError> {
     let privileged_user_id = bot_config.developer_id.parse::<u64>().ok();
+    let command_guild_id = bot_config.command_guild_id;
     if privileged_user_id.is_none() {
         tracing::warn!("BOT_DEVELOPER_ID is not a valid user ID; admin bypass disabled");
     }
@@ -103,7 +105,9 @@ pub async fn run_gateway(
                         let _ = state_tx.send(GatewayState { connected: true });
 
                         // Register commands
-                        if let Err(e) = register_commands(&http, ready.application.id).await {
+                        if let Err(e) =
+                            register_commands(&http, ready.application.id, command_guild_id).await
+                        {
                             tracing::error!("Failed to register commands: {}", e);
                         }
                     }
@@ -169,6 +173,7 @@ pub async fn run_gateway(
 async fn register_commands(
     http: &HttpClient,
     application_id: Id<ApplicationMarker>,
+    command_guild_id: Option<u64>,
 ) -> Result<(), AppError> {
     let commands = vec![
         // /panel command group
@@ -370,6 +375,13 @@ async fn register_commands(
             version: Id::new(1),
         },
     ];
+
+    if let Some(guild_id) = command_guild_id {
+        http.interaction(application_id)
+            .set_guild_commands(Id::<GuildMarker>::new(guild_id), &commands)
+            .await?;
+        tracing::info!("Registered guild commands for guild_id={}", guild_id);
+    }
 
     http.interaction(application_id)
         .set_global_commands(&commands)

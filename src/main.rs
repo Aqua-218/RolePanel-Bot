@@ -107,6 +107,7 @@ async fn main() {
         description: config.bot_description.clone(),
         developer_id: config.bot_developer_id.clone(),
         github_url: config.bot_github_url.clone(),
+        command_guild_id: config.command_guild_id,
     };
     let gateway_handle = tokio::spawn(async move {
         if let Err(e) = run_gateway(

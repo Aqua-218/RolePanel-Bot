@@ -13,6 +13,7 @@ pub struct Config {
     pub bot_description: String,
     pub bot_developer_id: String,
     pub bot_github_url: String,
+    pub command_guild_id: Option<u64>,
 }
 
 impl Config {
@@ -55,6 +56,10 @@ impl Config {
         let bot_github_url = env::var("BOT_GITHUB_URL")
             .unwrap_or_else(|_| "https://github.com/Aqua-218/RolePanel-Bot".to_string());
 
+        let command_guild_id = env::var("COMMAND_GUILD_ID")
+            .ok()
+            .and_then(|value| value.parse::<u64>().ok());
+
         Ok(Self {
             discord_token,
             database_url,
@@ -65,6 +70,7 @@ impl Config {
             bot_description,
             bot_developer_id,
             bot_github_url,
+            command_guild_id,
         })
     }
 }
@@ -84,6 +90,7 @@ impl fmt::Debug for Config {
             .field("bot_description", &self.bot_description)
             .field("bot_developer_id", &self.bot_developer_id)
             .field("bot_github_url", &self.bot_github_url)
+            .field("command_guild_id", &self.command_guild_id)
             .finish()
     }
 }
