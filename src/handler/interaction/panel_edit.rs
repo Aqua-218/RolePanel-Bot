@@ -534,6 +534,13 @@ pub async fn handle_panel_edit_interaction(
                 .await?;
         }
         "channel_select" => {
+            // Parse page number from custom_id if available: panel:{panel_id}:channel_select:{page}
+            // but for backward compatibility, default to page 0 if not present
+            let _page = parts
+                .get(3)
+                .and_then(|value| value.parse::<usize>().ok())
+                .unwrap_or(0);
+
             let component_data = data.ok_or(AppError::InvalidInput(
                 "コンポーネントデータがありません".into(),
             ))?;
