@@ -1,4 +1,15 @@
 services:
+  role-panel-bot:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://role_panel:dev_password@postgres:5432/role_panel
+    restart: unless-stopped
+
   postgres:
     image: postgres:16-alpine
     environment:
