@@ -1,14 +1,24 @@
 services:
-  role-panel-bot:
+  bot:
     build: .
+    image: role-panel-bot:latest
     depends_on:
       postgres:
         condition: service_healthy
-    env_file:
-      - .env
     environment:
-      DATABASE_URL: postgres://role_panel:dev_password@postgres:5432/role_panel
-    restart: unless-stopped
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      DATABASE_URL: ${DATABASE_URL}
+      ERROR_WEBHOOK_URL: ${ERROR_WEBHOOK_URL}
+      RUST_LOG: ${RUST_LOG:-info}
+      HEALTH_PORT: ${HEALTH_PORT:-8080}
+      DATABASE_MAX_CONNECTIONS: ${DATABASE_MAX_CONNECTIONS:-5}
+      BOT_NAME: ${BOT_NAME:-Role Panel Bot}
+      BOT_DESCRIPTION: ${BOT_DESCRIPTION:-2025年10月VRC同期会向けに作られたロールパネルBot}
+      BOT_DEVELOPER_ID: ${BOT_DEVELOPER_ID:-1340270150217236501}
+      BOT_GITHUB_URL: ${BOT_GITHUB_URL:-https://github.com/Aqua-218/RolePanel-Bot}
+    ports:
+      - "8080:8080"
+    restart: always
 
   postgres:
     image: postgres:16-alpine
